@@ -1,0 +1,45 @@
+<?php
+
+
+use App\Http\Controllers\User\ProfileController;
+use App\Http\Controllers\User\UserController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\Auth\DeactivateUserController;
+
+
+
+
+Route::group(['middleware' => ['token']], function () {
+
+    Route::prefix('/member')->group(function () {
+
+        Route::get('/create-new-user', [UserController::class, 'createNewUser'])->name('createNewUser');
+        Route::post('/register', [UserController::class, 'storeNewUser'])->name('storeNewUser');
+        Route::get('/editUser', [UserController::class, 'editUser'])->name('editUser');
+
+        Route::get('/userSettings', [UserController::class, 'userSettings'])->name('userSettings');
+        Route::get('/userSecurity', [UserController::class, 'userSecurity'])->name('userSecurity');
+        Route::get('/userDeactivate', [UserController::class, 'userDeactivate'])->name('userDeactivate');
+        Route::post('/two-fa-setup', [UserController::class, 'twoFaSetup'])->name('twoFaSetup');
+
+        Route::get('/get-authenticated-cred' ,[UserController::class , 'getAuthenticatedUser']);
+
+        Route::post('/update-this-user-profile', [UserController::class, 'updateUser']);
+
+        Route::get('/profile', [ProfileController::class, 'profile'])->name('profile');
+
+        Route::get('/profile/{userData}', [ProfileController::class, 'profileInfo'])->name('profileInfo');
+
+        Route::post('/set-auth-type',[UserController::class, 'setAuthType'])->name('setAuthType');
+
+        Route::post('/deactivate-account', [DeactivateUserController::class, 'deactivateMyAccount'])->name('deactivateMyAccount');
+
+    });
+
+    Route::get('/auth/{provider}/redirect/{userId}',[SocialiteController::class, 'userAuth'] )->name('userAuth');
+
+});
+
+
+
