@@ -6,6 +6,8 @@ use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Auth\DeactivateUserController;
+use App\Http\Controllers\DashboardController;
+
 
 
 
@@ -24,6 +26,9 @@ Route::group(['middleware' => ['token']], function () {
         Route::post('/two-fa-setup', [UserController::class, 'twoFaSetup'])->name('twoFaSetup');
 
         Route::get('/get-authenticated-cred' ,[UserController::class , 'getAuthenticatedUser']);
+
+        Route::get('/staff', [DashboardController::class, 'stuff'])->name('staff');
+
 
         Route::post('/update-this-user-profile', [UserController::class, 'updateUser']);
 

@@ -42,11 +42,11 @@ class RoleController extends Controller
                 return response()->json(['error' => 'Role not found'], 404);
             }
 
-            $roleList = $selectedRole->users()->with('detail')->paginate(10);
+            $roleList = $selectedRole->users()->with('detail')->with('company')->paginate(10);
 
             $roleList->appends(['keyword' => $request->input('keyword')]);
 
-            return response()->json(['roleList' => $roleList, 'allRoles' => $allRoles], 200);
+            return response()->json(['roleList' => $roleList], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to fetch roles: ' . $e->getMessage()], 500);
         }

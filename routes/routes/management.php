@@ -8,7 +8,7 @@ use App\Http\Controllers\Manage\UnitsController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['token']], function () {
-    Route::prefix('{company}/management')->group(function () {
+    Route::prefix('management')->group(function () {
 
 
         Route::get('/', [HomeController::class, 'showHomes'])->name('showHomes');
