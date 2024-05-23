@@ -16,10 +16,17 @@ class PlanController extends Controller
      */
     public function index(Request $request)
     {
-        $data = $this->loadCommonData($request, true);
-        $plans = Plans::all();
+        try {
+            $data = $this->loadCommonData($request, true);
+            $plans = Plans::all();
 
-        return view('pages.Plan.show', compact('plans') + $data ) ;
+            return response()->json(['plans' => $plans], 200);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'An error occurred while fetching companies data',
+            ], 500);
+        }
     }
 
     /**
@@ -29,7 +36,7 @@ class PlanController extends Controller
     {
         $data = $this->loadCommonData($request, true);
 
-        return view('pages.Plan.create',  $data);
+        return view('pages.Plan.create', $data);
     }
 
     /**
@@ -68,15 +75,14 @@ class PlanController extends Controller
         }
     }
 
-    public function editPlan(Request $request , $dummy , $plan)
+    public function editPlan(Request $request, $dummy, $plan)
     {
         $data = $this->loadCommonData($request, true);
 
         $selectedPlan = Plans::where('slug', $plan)->firstOrfail();
 
-        return view('pages.Plan.edit', compact('selectedPlan') +  $data);
+        return view('pages.Plan.edit', compact('selectedPlan') + $data);
     }
-
 
     public function updatePlan(Request $request, $dummy, $plan)
     {
@@ -92,13 +98,11 @@ class PlanController extends Controller
 
             $selectedPlan = Plans::findOrFail($plan);
 
-
             $selectedPlan->plan_name = $validatedData['plan_name'];
             $selectedPlan->duration = $validatedData['duration'];
             $selectedPlan->price = $validatedData['price'];
             $selectedPlan->number_of_companies = $validatedData['number_of_companies'];
             $selectedPlan->number_of_agents = $validatedData['number_of_agents'];
-
 
             $selectedPlan->save();
 
@@ -111,7 +115,6 @@ class PlanController extends Controller
         }
     }
 
-
     public function deletePlan($dummy, $plan)
     {
         try {
@@ -123,9 +126,5 @@ class PlanController extends Controller
             return redirect()->back()->with('error', 'Failed to delete plan. Please try again.');
         }
     }
-
-
-
-
 
 }

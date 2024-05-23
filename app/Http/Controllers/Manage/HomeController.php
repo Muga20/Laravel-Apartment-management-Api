@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
 use App\Models\Home;
-
 use App\Models\HomePaymentTypes;
 use App\Models\PaymentType;
 use App\Models\unitRecords;
@@ -12,12 +11,11 @@ use App\Models\Units;
 use App\Models\User;
 use App\Models\UserDetails;
 use App\Services\CompressionService;
-use Illuminate\Http\RedirectResponse;
+use App\Traits\ImageTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Traits\ImageTrait;
 
 class HomeController extends Controller
 {
@@ -28,8 +26,6 @@ class HomeController extends Controller
     {
         $this->compressionService = $compressionService;
     }
-
-
 
     public function HomeProfile(Request $request, $dummy, $unit)
     {
@@ -49,7 +45,6 @@ class HomeController extends Controller
 
         return view('pages.Management.Home.index', compact('homeUnits', 'home', 'unavailableEmptyCount', 'agentUsers', 'paymentTypes', 'countsStats', 'monthlyProfitLoss', 'availableMonths') + $data);
     }
-
 
     protected function getHomeUnits($home, $keyword)
     {
@@ -81,7 +76,6 @@ class HomeController extends Controller
             ->whereDate('created_at', $today)
             ->get();
 
-
         $pendingCount = $allUnitRecords->where('isApproved', 'pending')->count();
         $rejectedCount = $allUnitRecords->where('isApproved', 'rejected')->count();
         $completedCount = $allUnitRecords->where('isApproved', 'completed')->count();
@@ -106,7 +100,6 @@ class HomeController extends Controller
         $thisMonthRecords = UnitRecords::whereIn('unit_id', $unitIds)->where('created_at', '>=', $currentMonthFirstDay)->get();
         $totalActualThisMonthAmount = $thisMonthRecords->sum('rentFee');
 
-
         // Calculate the percentage profit or loss for last month
 
         if ($totalActualLastMonthAmount != 0) {
@@ -119,7 +112,6 @@ class HomeController extends Controller
 
         return compact('pendingCount', 'rejectedCount', 'completedCount', 'allCounts', 'totalActualThisMonthAmount', 'percentageProfitLossLastMonth', 'percentageProfitLossThisMonth');
     }
-
 
     protected function getMonthlyProfitLoss($home)
     {
@@ -156,9 +148,6 @@ class HomeController extends Controller
         ];
     }
 
-
-
-
     public function getHomePaymentType($homeId)
     {
         $paymentTypes = HomePaymentTypes::with('paymentType')->where('home_id', $homeId)->get();
@@ -166,36 +155,42 @@ class HomeController extends Controller
         return $paymentTypes;
     }
 
-
     public function showHomes(Request $request)
     {
-        $data = $this->loadCommonData($request);
-        $keyword = $request->input('keyword');
-        $companyId = $data['company']->id;
+        try {
+            $data = $this->loadCommonData($request);
+            $keyword = $request->input('keyword');
+            $companyId = $data['company']->id;
 
-        $query = Home::withCount('units')
-            ->where('company_id', $companyId)
-            ->latest();
+            $query = Home::withCount('units')
+                ->where('company_id', $companyId)
+                ->latest();
 
-        if ($keyword) {
-            $query->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', "%{$keyword}%")
-                    ->orWhere('location', 'like', "%{$keyword}%");
-            });
-        }
-
-        $allHouses = $query->paginate(10);
-        $allHouses->appends(['keyword' => $keyword]);
-
-        foreach ($allHouses as $house) {
-            if ($house->units->where('status', 'occupied')->count() == $house->units->count()) {
-                $house->status = 'fully occupied';
-            } else {
-                $house->status = 'available';
+            if ($keyword) {
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('name', 'like', "%{$keyword}%")
+                        ->orWhere('location', 'like', "%{$keyword}%");
+                });
             }
-        }
 
-        return view('pages.Management.showHouses', compact('allHouses') + $data);
+            $allHouses = $query->paginate(10);
+            $allHouses->appends(['keyword' => $keyword]);
+
+            foreach ($allHouses as $house) {
+                if ($house->units->where('status', 'occupied')->count() == $house->units->count()) {
+                    $house->status = 'fully occupied';
+                } else {
+                    $house->status = 'available';
+                }
+            }
+
+            return response()->json(['allHouses' => $allHouses], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while fetching the houses data.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function createHome(Request $request)
@@ -248,11 +243,11 @@ class HomeController extends Controller
 
             $ownerId = $data['user'];
 
-         if (!$company->status || $company->status !== 'active') {
-            $company->update(['status' => 'active']);
-         }
+            if (!$company->status || $company->status !== 'active') {
+                $company->update(['status' => 'active']);
+            }
 
-        // Store uploaded images
+            // Store uploaded images
             $imagePaths = [];
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
@@ -285,7 +280,7 @@ class HomeController extends Controller
 
             for ($i = 1; $i <= $totalUnits; $i++) {
                 $uniqueIdentifier = Str::uuid();
-                $unitName = substr($home->name, 0, 2) . '-' . ceil($i / $numberOfUnits) . '-' . str_pad($i, 2, '0', STR_PAD_LEFT) ;
+                $unitName = substr($home->name, 0, 2) . '-' . ceil($i / $numberOfUnits) . '-' . str_pad($i, 2, '0', STR_PAD_LEFT);
                 $units[] = [
                     'status' => 'vacant',
                     'slug' => $uniqueIdentifier,
@@ -302,15 +297,13 @@ class HomeController extends Controller
 
             return redirect()->back()->with('success', 'Home and units stored successfully');
         } catch (\Exception $e) {
-             //Rollback the transaction in case of an error
+            //Rollback the transaction in case of an error
             DB::rollBack();
             return back()->with('error', 'Failed to store home and units :' . $e->getMessage());
         }
     }
 
-
-
-    public function editHome(Request $request ,$dummy ,$slug)
+    public function editHome(Request $request, $dummy, $slug)
     {
         $data = $this->loadCommonData($request);
 
@@ -328,7 +321,7 @@ class HomeController extends Controller
             $query->where('name', 'agent');
         })->where('company_id', $company)->pluck('email', 'id');
 
-        return view('pages.Management.Home.editHome', compact('house' ,'users') + $data);
+        return view('pages.Management.Home.editHome', compact('house', 'users') + $data);
     }
 
     public function storeEditedHome(Request $request, $dummy, $slug)
@@ -348,7 +341,7 @@ class HomeController extends Controller
             'houseCategory' => 'required|string',
             'stories' => 'required|integer|min:1',
             'description' => 'nullable|string',
-            'rentPaymentDay' => 'required|string'
+            'rentPaymentDay' => 'required|string',
         ]);
 
         try {
@@ -375,10 +368,10 @@ class HomeController extends Controller
                 'phone' => $request->input('phone'),
                 'email' => $request->input('email'),
                 'agent_id' => $request->input('agent_id'),
-                'rentPaymentDay'=> $request->input('rentPaymentDay'),
+                'rentPaymentDay' => $request->input('rentPaymentDay'),
             ]);
 
-              // Update images using ImageTrait
+            // Update images using ImageTrait
             $this->updateImage($request, $home, 'images');
 
             $home->update();
@@ -389,8 +382,7 @@ class HomeController extends Controller
         }
     }
 
-
-    public function createHomePaymentInfo(Request $request ,$dummy , $slug )
+    public function createHomePaymentInfo(Request $request, $dummy, $slug)
     {
         $data = $this->loadCommonData($request);
 
@@ -404,10 +396,8 @@ class HomeController extends Controller
 
         $house = Home::where('slug', $slug)->first();
 
-        return view('pages.Management.Home.paymentInfo', compact('house','paymentMode') + $data);
+        return view('pages.Management.Home.paymentInfo', compact('house', 'paymentMode') + $data);
     }
-
-
 
     public function storeHomePaymentInfo(Request $request, $dummy, $slug)
     {
@@ -422,7 +412,7 @@ class HomeController extends Controller
 
             $home = Home::where('slug', $slug)->firstOrFail();
 
-             $request->validate([
+            $request->validate([
                 'account_name' => 'required|string',
                 'account_number' => 'required|string',
                 'payment_type_id' => 'required',
@@ -441,7 +431,7 @@ class HomeController extends Controller
             $paymentAccount->payment_type_id = $request->input('payment_type_id');
             $paymentAccount->home_id = $home->id;
 
-         $paymentAccount->save();
+            $paymentAccount->save();
 
             return redirect()->back()->with('success', 'Home details updated successfully');
         } catch (\Exception $e) {
@@ -449,8 +439,7 @@ class HomeController extends Controller
         }
     }
 
-
-    public function updatePaymentInfo(Request $request ,$dummy , $slug , $payment)
+    public function updatePaymentInfo(Request $request, $dummy, $slug, $payment)
     {
         $data = $this->loadCommonData($request);
 
@@ -462,15 +451,13 @@ class HomeController extends Controller
 
         $paymentMode = PaymentType::all()->pluck('name', 'id');
 
-
         $house = Home::where('slug', $slug)->first();
 
         $paymentData = HomePaymentTypes::where('uuid', $payment)->firstOrFail();
 
-        return view('pages.Management.Home.updatePaymentInfo', compact('house','paymentMode' ,'paymentData') + $data);
+        return view('pages.Management.Home.updatePaymentInfo', compact('house', 'paymentMode', 'paymentData') + $data);
 
     }
-
 
     public function updateHomePaymentInfo(Request $request, $dummy, $slug, $payment)
     {
@@ -487,9 +474,7 @@ class HomeController extends Controller
         }
     }
 
-
-
-    public function deletePaymentInfo( $dummy,  $payment)
+    public function deletePaymentInfo($dummy, $payment)
     {
         try {
             $paymentData = HomePaymentTypes::where('uuid', $payment)->firstOrFail();
@@ -501,16 +486,5 @@ class HomeController extends Controller
             return back()->with('error', 'Failed to delete payment details');
         }
     }
-
-
-
-
-
-
-
-
-
-
-
 
 }

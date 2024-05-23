@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['token']], function () {
 
-    Route::prefix('{company}/plans')->group(function () {
+    Route::prefix('plans')->group(function () {
 
     Route::get('/', [PlanController::class, 'index'])->name('plan.index');
     Route::get('/create', [PlanController::class, 'create'])->name('plan.create');

@@ -112,16 +112,27 @@ class CompanyController extends Controller
 
     public function showAvailableCompanies(Request $request)
     {
-        $data = $this->loadCommonData($request);
-        $keyword = $request->input('keyword');
-        $companies = Company::query()
-            ->where('name', 'like', "%{$keyword}%")
-            ->withCount('users')
-            ->latest()
-            ->paginate(10);
+        try {
+            $data = $this->loadCommonData($request);
+            $keyword = $request->input('keyword');
+            $companies = Company::query()
+                ->where('name', 'like', "%{$keyword}%")
+                ->withCount('users')
+                ->latest()
+                ->paginate(10);
 
-        return view('pages.Company.show', compact('companies') + $data);
+            return response()->json([
+                'companies' => $companies,
+                'data' => $data
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while fetching the companies data.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
+
 
 
 }
