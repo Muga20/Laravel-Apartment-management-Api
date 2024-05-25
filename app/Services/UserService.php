@@ -5,11 +5,10 @@ namespace App\Services;
 use App\Models\Units;
 use App\Models\User;
 use App\Models\UserDetails;
-use App\Traits\RoleRequirements;
 use App\Traits\ImageTrait;
+use App\Traits\RoleRequirements;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class UserService
 {
@@ -21,30 +20,31 @@ class UserService
         return $this->rolesThatMustHave($tier);
     }
 
-    public function createUser(Request $request)
+    public function createUser(Request $request, $data)
     {
-        list($user, $company, $userRoles) = $this->getUserAndCompany($request);
-
-        $request->validate([
-            'email' => 'required|email|unique:users',
-            'company_id' => 'required',
-            'first_name' => 'string|required',
-            'last_name' => 'string|required'
-        ]);
-
-        $requiredRolesLvTwo = $this->rolesThatMustHave(2);
-
-        if (count(array_intersect($requiredRolesLvTwo, $userRoles)) === 0) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        $userCount = $company->users()->count();
-
-        if ($userCount >= 20) {
-            return response()->json(['error' => 'Maximum number of users reached for this company'], 403);
-        }
-
         try {
+            $request->validate([
+                'email' => 'required|email|unique:users',
+                'first_name' => 'string|required',
+                'last_name' => 'string|required',
+            ]);
+
+            $userRoles = $data['userRoles'];
+            $requiredRolesLvTwo = $this->rolesThatMustHave(2);
+
+            if (count(array_intersect($requiredRolesLvTwo, $userRoles)) === 0) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $company = $data['company'];
+            $user = $data['user'];
+
+            $userCount = $company->users()->count();
+
+            if ($userCount >= 20) {
+                return response()->json(['error' => 'Maximum number of users reached for this company'], 403);
+            }
+
             $compressionService = new CompressionService();
             $compressedEmail = $compressionService->compressAttribute($request->input('email'));
 
@@ -59,15 +59,12 @@ class UserService
             $user->fill([
                 'email' => $request->input('email'),
                 'company_id' => $request->input('company_id'),
-                'first_name' => $request->input('first_name'),
-                'last_name' => $request->input('last_name'),
                 'uuid' => Str::uuid(),
-                'newTenant' => 'inactive'
             ]);
 
             $user->authType = 'otp';
             $user->status = 'inactive';
-            $user->company_id = $request->input('company_id');
+            $user->company_id = $company->id;
 
             $user->save();
 
@@ -80,14 +77,14 @@ class UserService
                 'middle_name' => $request->input('middle_name'),
                 'last_name' => $request->input('last_name'),
                 'username' => $username,
-                'is_verified' => 'false'
+                'is_verified' => 'false',
             ]);
 
             RoleService::assignDefaultRole($user, 'user');
 
-            return response()->json($user, 201);
+            return response()->json(['success' => 'User created successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500, [], JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -102,14 +99,14 @@ class UserService
         return $username;
     }
 
-    public function updateUser(Request $request , $data)
+    public function updateUser(Request $request, $data)
     {
 
         try {
 
             $userData = $request->only([
                 'first_name', 'middle_name', 'last_name', 'date_of_birth', 'id_number',
-                'username', 'address', 'phone', 'gender', 'location','about_the_user',
+                'username', 'address', 'phone', 'gender', 'location', 'about_the_user',
             ]);
 
             $this->updateImage($request, $userData, 'profileImage');

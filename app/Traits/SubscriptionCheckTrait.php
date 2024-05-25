@@ -29,7 +29,8 @@ trait SubscriptionCheckTrait
 
         if ($numberOfHomes >= $plan->number_of_homes) {
 
-            return response()->view('error.error403', ['error' => 'The company has reached the limit of allowed homes according to their plan.'], 403);
+            return response()->json(['error' => 'The company has reached the limit of allowed homes according to their plan.'], 403);
+
         }
 
         return null;

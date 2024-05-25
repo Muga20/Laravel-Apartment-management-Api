@@ -16,8 +16,7 @@ Route::group(['middleware' => ['token']], function () {
 
     Route::prefix('/member')->group(function () {
 
-        Route::get('/create-new-user', [UserController::class, 'createNewUser'])->name('createNewUser');
-        Route::post('/register', [UserController::class, 'storeNewUser'])->name('storeNewUser');
+        Route::post('/create-member', [UserController::class, 'storeNewUser'])->name('storeNewUser');
         Route::get('/editUser', [UserController::class, 'editUser'])->name('editUser');
 
         Route::get('/userSettings', [UserController::class, 'userSettings'])->name('userSettings');

@@ -37,6 +37,12 @@ class Controller extends BaseController
     {
         list($user, $company, $userRoles) = $this->getUserAndCompany($request);
 
+        $requiredRoles = $this->getRequiredRoles(1);
+        $requiredRolesLvTwo = $this->getRequiredRoles(2);
+        $requiredRolesLvThree = $this->getRequiredRoles(3);
+        $requiredRolesLvFour = $this->getRequiredRoles(4);
+        $requiredRolesLvFive = $this->getRequiredRoles(5);
+
         if ($user) {
             return [
                 'user' => $user,

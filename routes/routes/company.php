@@ -10,7 +10,7 @@ Route::group(['middleware' => ['token']], function () {
     Route::prefix('/company')->group(function () {
 
         Route::get('/', [CompanyController::class, 'index'])->name('company.index');
-        Route::post('/store', [CompanyController::class, 'store'])->name('company.store');
+        Route::post('/create-company', [CompanyController::class, 'store'])->name('company.store');
 
         Route::get('/showAvailableCompanies' , [CompanyController::class , 'showAvailableCompanies'])->name('showAvailableCompanies');
         Route::get('/CompaniesPaid' ,[SubscriptionController::class , 'CompaniesPaid'])->name('CompaniesPaid');

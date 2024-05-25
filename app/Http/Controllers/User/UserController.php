@@ -36,7 +36,6 @@ class UserController extends Controller
         }
     }
 
-
     public function getAuthenticatedUser(Request $request)
     {
         try {
@@ -53,15 +52,13 @@ class UserController extends Controller
         }
     }
 
-    public function createNewUser(Request $request)
-    {
-        $data = $this->loadCommonData($request);
-        return view('pages.User.create', $data);
-    }
+
 
     public function storeNewUser(Request $request)
     {
-        $response = $this->userService->createUser($request);
+        $data = $this->loadCommonData($request);
+
+        $response = $this->userService->createUser($request , $data );
 
         if ($response instanceof User) {
             $user = $response;
@@ -69,9 +66,9 @@ class UserController extends Controller
                 // Uncomment the following lines once you have the necessary imports and implementations
                 // $company = Company::findOrFail($validatedData['company_id']);
                 // Mail::to($validatedData['email'])->send(new NewAccount($user, $company));
-                return redirect()->back()->with('success', 'User Created Successfully');
+                return response()->json(['success' => 'User Created Successfully'], 200);
             } catch (ModelNotFoundException $e) {
-                return redirect()->back()->with('error', 'Company not found.');
+                return response()->json(['error' => 'Company not found.'], 404);
             }
         } else {
             return $response;

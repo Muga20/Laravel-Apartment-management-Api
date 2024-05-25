@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-use Exception;
-use App\Models\Company;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 
 class CompanyController extends Controller
@@ -28,7 +27,7 @@ class CompanyController extends Controller
 
         $companyUsers = User::where('company_id', $data['company']->id)->get();
 
-        return view('pages.Company.profile' ,compact('companyUsers' ), $data);
+        return view('pages.Company.profile', compact('companyUsers'), $data);
     }
 
     /**
@@ -45,13 +44,21 @@ class CompanyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
     public function store(Request $request)
     {
         try {
-            $validatedData = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => $validator->errors()->first(),
+                ], 422);
+            }
+
+            $validatedData = $validator->validated();
             $validatedData['status'] = 'inactive';
 
             $slug = Str::slug($validatedData['name']);
@@ -68,15 +75,22 @@ class CompanyController extends Controller
             $company->companyId = $randomNumber;
             $company->slug = $slug;
 
+            $image = $request->file('logoImage');
+            $uploadedImageUrl = Cloudinary::upload($image->getRealPath())->getSecurePath();
+
+            $company->logoImage = $uploadedImageUrl;
+
             $company->save();
 
-
-            return redirect()->back()->with('success', 'Company Created Successfully');
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create company. Please try again.');
+            return response()->json(['success' => 'Company Created Successfully',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to create company. Please try again.',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
-
     /**
      * Display the specified resource.
      */
@@ -87,7 +101,7 @@ class CompanyController extends Controller
         $companies = Company::pluck('name', 'id')->toArray();
 
         return view('pages.Company.companyOwnerRegistration', $data +
-            compact( 'companies'));
+            compact('companies'));
     }
 
     public function companyOwnerRegistration(Request $request)
@@ -109,7 +123,6 @@ class CompanyController extends Controller
         }
     }
 
-
     public function showAvailableCompanies(Request $request)
     {
         try {
@@ -123,17 +136,14 @@ class CompanyController extends Controller
 
             return response()->json([
                 'companies' => $companies,
-                'data' => $data
+                'data' => $data,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while fetching the companies data.',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
 
-
-
 }
-

@@ -15,7 +15,7 @@ Route::group(['middleware' => ['token']], function () {
 
         Route::get('/all-users', [UserController::class, 'allUsers'])->name('allUsers');
 
-        Route::post('/store', [RoleController::class, 'store'])->name('role.store');
+        Route::post('/create-role', [RoleController::class, 'createRole'])->name('createRole');
         Route::get('/{role}', [RoleController::class, 'usersByRole'])->name('users_by_role');
 
         Route::get('/edit-role/{role}' ,[RoleController::class, 'editRole'])->name('editRole');

@@ -52,13 +52,7 @@ class RoleController extends Controller
         }
     }
 
-    public function create(Request $request)
-    {
-        $data = $this->loadCommonData($request);
-        return view('pages.Roles.create', $data);
-    }
-
-    public function store(Request $request)
+    public function createRole(Request $request)
     {
         try {
             $validatedData = $request->validate([
@@ -70,10 +64,10 @@ class RoleController extends Controller
             $role->slug = Str::slug($validatedData['name'], '-');
             $role->save();
 
-            return redirect()->back()->with('success', 'Roles Created Successfully');
+            return response()->json(['success'=> 'Role created successfully'], 201);
 
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create Roles. Please try again.');
+            return response()->json(['error' => 'Failed to create Roles. Please try again.'], 500);
         }
     }
 
