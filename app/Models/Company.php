@@ -32,7 +32,7 @@ class Company extends Model
     {
         if ($compress && in_array($key,  [
         'email', 'address', 'phone',
-        'description', 'location',
+        'description',
     ]))
             return gzcompress($value);
         return $value;

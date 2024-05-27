@@ -11,7 +11,7 @@ class CompressionService
 
         'Company' => [
             'email', 'address', 'phone',
-            'description', 'location',
+            'description',
         ],
 
         'Tenants' => [

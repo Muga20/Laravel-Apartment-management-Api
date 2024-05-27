@@ -9,14 +9,14 @@ Route::group(['middleware' => ['token']], function () {
 
     Route::prefix('/roles')->group(function () {
 
-        Route::get('/', [RoleController::class, 'index'])->name('role.index');
+        Route::get('/', [RoleController::class, 'index']);
         Route::get('/create', [RoleController::class, 'create'])->name('role.create');
         Route::get('/tenants', [TenantsController::class, 'allTenants'])->name('allTenants');
 
         Route::get('/all-users', [UserController::class, 'allUsers'])->name('allUsers');
 
         Route::post('/create-role', [RoleController::class, 'createRole'])->name('createRole');
-        Route::get('/{role}', [RoleController::class, 'usersByRole'])->name('users_by_role');
+        Route::get('/{role}', [RoleController::class, 'getUsersByRoleAndSearch']);
 
         Route::get('/edit-role/{role}' ,[RoleController::class, 'editRole'])->name('editRole');
         Route::put('update-role/{role}' ,[RoleController::class, 'updateRole'])->name('updateRole');

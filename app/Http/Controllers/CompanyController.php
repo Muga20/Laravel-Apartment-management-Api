@@ -5,12 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\User;
 use App\Services\UserService;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-
 
 class CompanyController extends Controller
 {
@@ -128,11 +127,22 @@ class CompanyController extends Controller
         try {
             $data = $this->loadCommonData($request);
             $keyword = $request->input('keyword');
-            $companies = Company::query()
+            $page = $request->input('page', 1);
+            $perPage = 15;
+            $status = $request->input('status');
+            $location = $request->input('location');
+
+            $companiesQuery = Company::query()
                 ->where('name', 'like', "%{$keyword}%")
-                ->withCount('users')
+                ->where('status', 'like', "%{$status}%");
+
+            if ($location !== null) {
+                $companiesQuery->where('location', 'like', "%{$location}%");
+            }
+
+            $companies = $companiesQuery->withCount('users')
                 ->latest()
-                ->paginate(10);
+                ->paginate($perPage, ['*'], 'page', $page);
 
             return response()->json([
                 'companies' => $companies,

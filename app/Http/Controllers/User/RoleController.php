@@ -31,25 +31,9 @@ class RoleController extends Controller
         }
     }
 
-    public function usersByRole(Request $request, $role)
+    public function getUsersByRoleAndSearch(Request $request, $role)
     {
-        try {
-            $allRoles = Roles::all();
-
-            $selectedRole = Roles::where('name', $role)->first();
-
-            if (!$selectedRole) {
-                return response()->json(['error' => 'Role not found'], 404);
-            }
-
-            $roleList = $selectedRole->users()->with('detail')->with('company')->paginate(10);
-
-            $roleList->appends(['keyword' => $request->input('keyword')]);
-
-            return response()->json(['roleList' => $roleList], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to fetch roles: ' . $e->getMessage()], 500);
-        }
+        return $this->usersByRoleAndSearch($request, $role);
     }
 
     public function createRole(Request $request)
@@ -64,7 +48,7 @@ class RoleController extends Controller
             $role->slug = Str::slug($validatedData['name'], '-');
             $role->save();
 
-            return response()->json(['success'=> 'Role created successfully'], 201);
+            return response()->json(['success' => 'Role created successfully'], 201);
 
         } catch (Exception $e) {
             return response()->json(['error' => 'Failed to create Roles. Please try again.'], 500);
