@@ -25,7 +25,7 @@ trait SearchTrait
                 return response()->json(['error' => 'Role not found'], 404);
             }
 
-            $query = $selectedRole->users()->with('detail')->with('company');
+            $query = $selectedRole->users()->with('detail')->with('company')->with('roles');
 
             if ($keyword) {
                 $compressionService = new CompressionService();

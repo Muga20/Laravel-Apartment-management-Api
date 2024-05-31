@@ -45,6 +45,7 @@ class RoleController extends Controller
 
             $role = new Roles();
             $role->name = $validatedData['name'];
+            $role->status = 'inactive';
             $role->slug = Str::slug($validatedData['name'], '-');
             $role->save();
 
@@ -87,13 +88,13 @@ class RoleController extends Controller
         }
     }
 
-    public function deactivateUser($dummy, $deactivate = null)
+    public function deactivateUser(Request $request, $deactivate = null)
     {
         try {
-            $user = User::find($deactivate);
+            $user = User::findOrFail($deactivate);
 
             if (!$user) {
-                return redirect()->back()->with('error', 'User not found.');
+                return response()->json(['error' => 'User not found.'], 404);
             }
 
             $newStatus = $user->status === 'active' ? 'inactive' : 'active';
@@ -104,30 +105,22 @@ class RoleController extends Controller
 
             $successMessage = $newStatus === 'inactive' ? 'User deactivated successfully.' : 'User activated successfully.';
 
-            return redirect()->back()->with('success', $successMessage);
+            return response()->json(['message' => $successMessage], 200);
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to deactivate/activate user. Please try again.');
+            return response()->json(['error' => 'Failed to deactivate/activate user. Please try again.'], 500);
         }
     }
 
-    public function assignRoleToUser(Request $request, $dummy, $addRoleToId = null)
+    public function assignRoleToUser(Request $request, $id)
     {
         try {
             $validatedData = $request->validate([
                 'role_id' => 'required',
             ]);
 
-            $user = User::where('id', $addRoleToId)->first();
+            $user = User::findOrFail($id);
 
-            if (!$user) {
-                throw new \Exception('User not found.');
-            }
-
-            $role = Roles::find($validatedData['role_id']); // Corrected 'Roles' to 'Role'
-
-            if (!$role) {
-                throw new \Exception('Role not found.');
-            }
+            $role = Roles::findOrFail($validatedData['role_id']);
 
             $existingUserRole = UseRoles::where('user_id', $user->id)
                 ->where('role_id', $role->id)
@@ -139,19 +132,18 @@ class RoleController extends Controller
                 $userRole->role_id = $role->id;
                 $userRole->save();
             } else {
-                throw new \Exception('User already has this role.');
+                return response()->json(['message' => 'User already has this role.'], 200);
             }
 
-            return back()->with('success', 'Role assigned successfully.');
+            return response()->json(['message' => 'Role assigned successfully'], 200);
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to assign role: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to assign role: ' . $e->getMessage()], 500);
         }
     }
 
-    public function deleteRoleFromUser($dummy, $user, $role)
+    public function deleteRoleFromUser($user, $role)
     {
         try {
-
             $user = User::findOrFail($user);
 
             $roleAssociation = UseRoles::where('user_id', $user->id)
@@ -160,22 +152,32 @@ class RoleController extends Controller
 
             $roleAssociation->delete();
 
-            return redirect()->back()->with('success', 'Role removed successfully from user.');
+            return response()->json(['message' => 'Role removed successfully from user'], 200);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to remove role from user: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to remove role from user: ' . $e->getMessage()], 500);
         }
     }
 
-    public function deleteRole($dummy, $role)
+    public function deleteRole($role)
     {
         try {
-            $wipeRole = Roles::findOrFail($role);
+            $roleModel = Roles::findOrFail($role);
 
-            $wipeRole->delete();
+            if ($roleModel->status === 'active') {
+                return response()->json([
+                    'error' => 'Role is active and cannot be deleted.',
+                ], 400);
+            }
 
-            return redirect()->back()->with('success', 'Role deleted successfully.');
+            $roleModel->delete();
+
+            return response()->json([
+                'message' => 'Role deleted successfully',
+            ], 200);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to delete role: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to delete role: ' . $e->getMessage(),
+            ], 500);
         }
     }
 

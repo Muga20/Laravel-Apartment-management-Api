@@ -32,6 +32,10 @@ class ForgotPassword extends Mailable
     public function build()
     {
         return $this->subject('Password Reset Request')
-            ->view('emails.forgotPassword');
+            ->view('emails.forgotPassword')
+            ->with([
+                'token' => $this->token,
+            ]);
     }
+
 }

@@ -22,12 +22,12 @@ Route::group(['middleware' => ['token']], function () {
         Route::put('update-role/{role}' ,[RoleController::class, 'updateRole'])->name('updateRole');
 
 
-        Route::post('deactivate_user/{deactivate}', [RoleController::class, 'deactivateUser'])->name('deactivate_user');
-        Route::post('assign_role_to_user/{addRoleToId}', [RoleController::class, 'assignRoleToUser'])->name('assign_role_to_user');
+        Route::put('/deactivate_user/{deactivate}', [RoleController::class, 'deactivateUser']);
+        Route::post('/assign_role_to_user/{id}', [RoleController::class, 'assignRoleToUser']);
 
         // Route for deleting a role
-        Route::post('delete_role_action/{user}/{role}', [RoleController::class, 'deleteRoleFromUser'])->name('delete_role_action');
-        Route::delete('/delete_role/{role}', [RoleController::class, 'deleteRole'])->name('deleteRole');
+        Route::delete('/delete_role_action/{user}/{role}', [RoleController::class, 'deleteRoleFromUser']);
+        Route::delete('/delete_role/{role}', [RoleController::class, 'deleteRole']);
 
 
 

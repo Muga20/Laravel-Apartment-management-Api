@@ -1,13 +1,12 @@
-<?php
+<!--
 
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 use App\Traits\AuthTrait;
-use App\Models\User;
-use Illuminate\Support\Facades\Cookie;
 
 class SocialiteController extends Controller
 {
@@ -15,7 +14,8 @@ class SocialiteController extends Controller
 
     public function autoAuth($provider)
     {
-        return Socialite::driver($provider)->redirect();
+        $authUrl = Socialite::driver($provider)->stateless()->redirect()->getTargetUrl();
+        return response()->json(['authUrl' => $authUrl]);
     }
 
     public function userAuth(Request $request, $provider)
@@ -23,24 +23,27 @@ class SocialiteController extends Controller
         try {
             $data = $this->loadCommonData($request);
             $user = $data['user'];
-            $companySlug = $data['company']->slug;
 
-            $request->session()->put(['user_id' => $user->id, 'company_slug' => $companySlug]);
+            $authUrl = Socialite::driver($provider)->stateless()->redirect()->getTargetUrl();
 
-            return Socialite::driver($provider)->redirect();
+            return response()->json(['authUrl' => $authUrl]);
+
         } catch (\Exception $e) {
             // Handle exceptions
+            return response()->json(['error' => 'Failed to authenticate user'], 500);
         }
     }
 
     public function autoAuthCallBack($provider)
     {
         try {
-            $socialUser = Socialite::driver($provider)->user();
+
+            $socialUser = Socialite::driver($provider)->stateless()->user();
+
             $request = request();
 
-            $userId = $request->session()->pull('user_id');
-            $companySlug = $request->session()->pull('company_slug');
+
+            $userId = $request->input('user_id');
 
             if ($userId) {
                 $existingUser = User::where('id', $userId)
@@ -48,7 +51,7 @@ class SocialiteController extends Controller
                     ->first();
 
                 if ($existingUser) {
-                    return redirect()->route('userSettings', $companySlug)->with('error', 'Details already exist.');
+                    return response()->json(['error' => 'Details already exist.'], 400);
                 }
 
                 $userInstance = User::find($userId);
@@ -59,20 +62,27 @@ class SocialiteController extends Controller
                     'provider_token' => $socialUser->token,
                 ]);
 
-                return redirect()->route('userSettings', $companySlug)->with('success', 'Login Type Successfully Updated.');
+                return response()->json(['success' => 'Login Type Successfully Updated.'], 200);
+
             } else {
+
                 $user = User::where('provider_id', $socialUser->id)->first();
 
                 if (!$user) {
-                    return redirect()->route('login')->with('error', 'Account not found. Please contact the admin.');
+                    return response()->json(['error' => 'Account not found. Please contact the admin.'], 404);
+                }
+
+                $redirectUrl = 'http://localhost:5173/auth/verify';
+
+                if ($redirectUrl){
+                    return redirect()->to($redirectUrl);
                 }
 
                 return $this->handleAuthentication($user, $request);
             }
         } catch (\Exception $e) {
-            $companySlug = $request->session()->get('company_slug', '');
-
-            return redirect()->route('userSettings', $companySlug)->withErrors(['error' => 'Failed to Update Login Type: ' . $e->getMessage()]);
+            return response()->json(['error' => 'Failed to Update Login Type: ' . $e->getMessage()], 500);
         }
     }
-}
+
+} -->

@@ -156,4 +156,55 @@ class CompanyController extends Controller
         }
     }
 
+    // Existing methods...
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Request $request, $companyId)
+    {
+        try {
+            $company = Company::findOrFail($companyId);
+            $company->delete();
+
+            return response()->json([
+                'message' => 'Company deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to delete company',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Deactivate the specified resource in storage.
+     */
+    public function deactivate(Request $request, $companyId)
+    {
+        try {
+            $company = Company::findOrFail($companyId);
+
+            if ($company->status === 'active') {
+                $company->status = 'inactive';
+                $message = 'Company deactivated successfully';
+            } else {
+                $company->status = 'active';
+                $message = 'Company activated successfully';
+            }
+
+            $company->save();
+
+            return response()->json([
+                'message' => $message,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to toggle company status',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ForgotPassword;
 use App\Models\User;
+use App\Services\CompressionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Mail;
 
 class ResetPasswordController extends Controller
 {
@@ -105,10 +107,12 @@ class ResetPasswordController extends Controller
     public function sendResetPasswordEmail(Request $request)
     {
         try {
-            $data = $request->all(); // Assuming data is sent as JSON
+            $data = $request->all();
 
-            // Find user by email
-            $user = User::where('email', $data['email'])->first();
+            $compressionService = new CompressionService();
+            $compressedEmail = $compressionService->compressAttribute($data['email']);
+
+            $user = User::where('email', $compressedEmail)->first();
 
             if (!$user) {
                 return response()->json(['error' => 'User not found.'], 404);
@@ -119,27 +123,34 @@ class ResetPasswordController extends Controller
             }
 
             // Generate JWT token
-            $token = JWTAuth::fromUser($user, ['exp' => now()->addHours(24)->timestamp]);
+            $tokenG = base64_encode($user->id . '|' . now()->addHours(24)->timestamp);
 
-            // Mail::to($user->email)->send(new ForgotPassword($user, $token));
+            $token = 'http://localhost:5173/auth/new-password/' . str_replace('.', '_', $tokenG);
 
-            return response()->json(['message' => 'Password reset email sent successfully. Please check your inbox.'], 200);
+            Mail::to($user->email)->send(new ForgotPassword($user, $token));
+
+            return response()->json(['success' => 'Password reset email sent successfully. Please check your inbox.'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to send password reset email: ' . $e->getMessage()], 500);
         }
     }
 
-    public function passwordReset(Request $request, $token)
-    {
-        // This method can remain unchanged as it's returning a view for resetting the password
-        return view('auth.reset-password', compact('token'));
-    }
-
     public function newPassword(Request $request, $token)
     {
         try {
-            $tokenPayload = $this->decodeToken($token);
-            $userId = $tokenPayload->get('sub');
+
+            $request->validate([
+                'newPassword' => 'required',
+                'authStatus' => 'required',
+            ]);
+
+            $decodedToken = base64_decode(str_replace('_', '.', $token));
+
+            list($userId, $timestamp) = explode('|', $decodedToken);
+
+            if (time() > $timestamp) {
+                return response()->json(['error' => 'Token has expired.'], 400);
+            }
 
             $user = User::find($userId);
 
@@ -147,18 +158,31 @@ class ResetPasswordController extends Controller
                 return response()->json(['error' => 'User not found or invalid token.'], 404);
             }
 
-            $data = $request->all(); // Assuming data is sent as JSON
+            $newPassword = $request->input('newPassword');
+            $authStatus = $request->input('authStatus');
 
-            // Validation
-            // Note: Validation can also be performed using FormRequest classes
+            $data = $this->loadCommonData($request);
 
-            $user->password = Hash::make($data['newPassword']);
+            if (isset($authStatus) && $authStatus === 'authOn') {
 
-            $user->save();
+                $user->password = Hash::make($newPassword);
+                $user->save();
 
-            return response()->json(['success' => 'Password updated successfully.'], 200);
+                return response()->json(['success' => 'Password updated successfully.'], 200);
+
+            } elseif (isset($authStatus) && $authStatus === 'authOff') {
+
+                $user->password = Hash::make($newPassword);
+                $user->save();
+
+                return $this->handleAuthentication($user, $request);
+
+            } else {
+                return response()->json(['error' => 'Invalid authentication status.'], 400);
+            }
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to update password: ' . $e->getMessage()], 500);
         }
     }
+
 }

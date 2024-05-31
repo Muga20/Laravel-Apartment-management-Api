@@ -34,7 +34,7 @@ return [
     'google' => [
         'client_id' => env('GOOGlE_CLIENT_ID'),
         'client_secret' => env('GOOGlE_CLIENT_SECRET'),
-        'redirect' => '/auth/google/callback',
+        'redirect' => '/api/auth/google/callback',
     ],
 
     'facebook' => [

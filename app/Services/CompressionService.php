@@ -9,11 +9,6 @@ class CompressionService
              'email'
         ],
 
-        'Company' => [
-            'email', 'address', 'phone',
-            'description',
-        ],
-
         'Tenants' => [
             'email','phone' ,
             'id_number', 'blood_group' ,

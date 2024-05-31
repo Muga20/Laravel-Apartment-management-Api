@@ -73,7 +73,7 @@
                                                     You have requested to reset your password. Click the following link to reset your password:
                                                 </p>
 
-                                                {{-- <a href="http://localhost:5173/auth/reset-password/{{ $token }}">Reset Password</a>. --}}
+                                                <a href="{{ $token }}">Reset Password</a>.
 
                                                 <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;" align="left">
                                                     If you did not request a password reset, you can safely ignore this email.
