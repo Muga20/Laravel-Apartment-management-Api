@@ -47,7 +47,7 @@ Route::get('/view-token', [LoginController::class, 'viewTokenFromCookie'])->name
 Route::post('/forgot-password', [ResetPasswordController::class, 'sendResetPasswordEmail'])->name('sendResetPasswordEmail');
 
 Route::get('/passwordReset/{token}', [ResetPasswordController::class, 'passwordReset'])->middleware('redirect.auth')->name('passwordReset');
-Route::post('/new-password/{token}', [ResetPasswordController::class, 'newPassword'])->middleware('redirect.auth')->name('newPassword');
+Route::post('/new-password/{token}', [ResetPasswordController::class, 'newPassword']);
 
-Route::get('/auth-new-user/{authLink}', [AuthNewUserController::class, 'AuthNewUser'])->middleware('redirect.auth')->name('AuthNewUser');
-Route::post('/auth-new-user/{authLink}', [AuthNewUserController::class, 'ConfirmAuthNewUser'])->middleware('redirect.auth')->name('ConfirmAuthNewUser');
+
+Route::post('/auth-new-user/{authLink}', [AuthNewUserController::class, 'ConfirmAuthNewUser']);

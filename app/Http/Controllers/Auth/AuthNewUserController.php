@@ -7,15 +7,13 @@ use App\Models\User;
 use App\Services\CompressionService;
 use App\Traits\AuthTrait;
 use Illuminate\Http\Request;
+use App\Models\NewUserSession;
+
 
 class AuthNewUserController extends Controller
 {
     use AuthTrait;
 
-    public function AuthNewUser(Request $request, $authLink)
-    {
-        return view("auth.authNewUser", compact('authLink'));
-    }
 
     public function ConfirmAuthNewUser(Request $request, $authLink)
     {
@@ -26,7 +24,6 @@ class AuthNewUserController extends Controller
 
         $user = User::where('email', $compressedEmail)->first();
 
-        
         if (!$user) {
             return $this->handleAuthenticationFailure('User not found.');
         }
@@ -37,26 +34,31 @@ class AuthNewUserController extends Controller
             }
         }
 
-        $decodedAuthLink = base64_decode($authLink);
-        $parts = explode(':', $decodedAuthLink);
-        $receivedToken = $parts[0];
-        $receivedUniqueId = $parts[1] ?? null;
+        if ($user->authType === 'otp') {
 
-        if ($user->otp === $receivedToken) {
+            // Find the token in the database
+            $tokenData = NewUserSession::where('token', $authLink)->first();
 
-
-            $user->update(['otp' => null,]);
-
-            if (!$user->password) {
-                return redirect()->route('userSettings', $user->company->slug)->with('error', 'You need to set a password first.');
+            if (!$tokenData) {
+                return response()->json(['error' => 'Invalid or expired token.'], 400);
             }
 
-            // Handle successful authentication
+            $user = User::where('email', $compressedEmail)->first();
+
+            if (!$user) {
+                return response()->json(['error' => 'User not found.'], 404);
+            }
+
+            $user->update(['authType' => "password"]);
+
+            // Invalidate the token
+            $tokenData->delete();
+
             return $this->handleAuthentication($user, $request);
+
         } else {
             return $this->handleAuthenticationFailure('Unauthorized - Invalid credentials');
         }
     }
-
 
 }

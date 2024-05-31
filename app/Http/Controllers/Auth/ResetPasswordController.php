@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\ForgotPassword;
+use App\Models\PasswordResetToken;
 use App\Models\User;
 use App\Services\CompressionService;
+use App\Traits\AuthTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class ResetPasswordController extends Controller
 {
+    use AuthTrait;
+
     public function updateSecurity(Request $request)
     {
         try {
@@ -119,15 +124,21 @@ class ResetPasswordController extends Controller
             }
 
             if ($user->two_fa_status === 'active') {
-                $user->two_fa_status === 'inactive';
+                $user->two_fa_status = 'inactive';
+                $user->save();
             }
 
-            // Generate JWT token
-            $tokenG = base64_encode($user->id . '|' . now()->addHours(24)->timestamp);
+            // Generate unique token
+            $token = str_replace('.', '_', base64_encode($user->id . '|' . now()->timestamp . '|' . Str::random(40)));
 
-            $token = 'http://localhost:5173/auth/new-password/' . str_replace('.', '_', $tokenG);
+            PasswordResetToken::create([
+                'email' => $user->email,
+                'token' => $token,
+            ]);
 
-            Mail::to($user->email)->send(new ForgotPassword($user, $token));
+            $resetLink = 'http://localhost:5173/auth/new-password/' . $token;
+
+            Mail::to($user->email)->queue((new ForgotPassword($user, $resetLink)));
 
             return response()->json(['success' => 'Password reset email sent successfully. Please check your inbox.'], 200);
         } catch (\Exception $e) {
@@ -138,45 +149,50 @@ class ResetPasswordController extends Controller
     public function newPassword(Request $request, $token)
     {
         try {
-
             $request->validate([
-                'newPassword' => 'required',
+                'newPassword' => 'required|min:6',
+                'confirmPassword' => 'required|same:newPassword',
                 'authStatus' => 'required',
             ]);
-
-            $decodedToken = base64_decode(str_replace('_', '.', $token));
-
-            list($userId, $timestamp) = explode('|', $decodedToken);
-
-            if (time() > $timestamp) {
-                return response()->json(['error' => 'Token has expired.'], 400);
-            }
-
-            $user = User::find($userId);
-
-            if (!$user) {
-                return response()->json(['error' => 'User not found or invalid token.'], 404);
-            }
 
             $newPassword = $request->input('newPassword');
             $authStatus = $request->input('authStatus');
 
-            $data = $this->loadCommonData($request);
-
             if (isset($authStatus) && $authStatus === 'authOn') {
 
-                $user->password = Hash::make($newPassword);
-                $user->save();
+                $data = $this->loadCommonData($request);
+                $loggedInUser = $data['user'];
+
+                $loggedInUser->password = Hash::make($newPassword);
+                $loggedInUser->save();
 
                 return response()->json(['success' => 'Password updated successfully.'], 200);
 
             } elseif (isset($authStatus) && $authStatus === 'authOff') {
 
+                // Find the token in the database
+                $tokenData = PasswordResetToken::where('token', $token)->first();
+
+                if (!$tokenData) {
+                    return response()->json(['error' => 'Invalid or expired token.'], 400);
+                }
+
+                $compressionService = new CompressionService();
+                $compressedEmail = $compressionService->compressAttribute($tokenData->email);
+
+                $user = User::where('email', $compressedEmail)->first();
+
+                if (!$user) {
+                    return response()->json(['error' => 'User not found.'], 404);
+                }
+
                 $user->password = Hash::make($newPassword);
                 $user->save();
 
-                return $this->handleAuthentication($user, $request);
+                // Invalidate the token
+                $tokenData->delete();
 
+                return $this->handleAuthentication($user, $request);
             } else {
                 return response()->json(['error' => 'Invalid authentication status.'], 400);
             }

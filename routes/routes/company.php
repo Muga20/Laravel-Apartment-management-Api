@@ -14,7 +14,7 @@ Route::group(['middleware' => ['token']], function () {
         Route::get('/showAvailableCompanies', [CompanyController::class, 'showAvailableCompanies'])->name('showAvailableCompanies');
         Route::get('/CompaniesPaid', [SubscriptionController::class, 'CompaniesPaid'])->name('CompaniesPaid');
         Route::get('/showAvailableCompanies/company-owner', [CompanyController::class, 'companyOwner'])->name('companyOwner');
-        Route::post('/showAvailableCompanies/companyOwnerRegistration', [CompanyController::class, 'companyOwnerRegistration'])->name('companyOwnerRegistration');
+        Route::post('/companyOwnerRegistration', [CompanyController::class, 'companyOwnerRegistration'])->name('companyOwnerRegistration');
         Route::get('/showAvailableCompanies/create', [CompanyController::class, 'create'])->name('company.create');
         // Route for deleting a company
         Route::delete('/{companyId}', [CompanyController::class, 'destroy'])->name('company.destroy');

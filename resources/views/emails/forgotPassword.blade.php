@@ -1,146 +1,667 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
+    xmlns:o="urn:schemas-microsoft-com:office:office">
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html>
 <head>
-    <!-- Compiled with Bootstrap Email version: 1.3.1 -->
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="x-apple-disable-message-reformatting">
+    <!--[if (gte mso 9)|(IE)]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+    <!-- So that mobile will display zoomed in -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"> <!-- enable media queries for windows phone 8 -->
+    <meta name="format-detection" content="telephone=no"> <!-- disable auto telephone linking in iOS -->
+    <meta name="format-detection" content="date=no"> <!-- disable auto date linking in iOS -->
+    <meta name="format-detection" content="address=no"> <!-- disable auto address linking in iOS -->
+    <meta name="format-detection" content="email=no"> <!-- disable auto email linking in iOS -->
+    <meta name="author" content="Simple-Pleb.com">
+    <title>{{ __('pleb.mail.Forgot Password Title') }} | {{ config('app.name') }}</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+
     <style type="text/css">
-        body,table,td{font-family:Helvetica,Arial,sans-serif !important}.ExternalClass{width:100%}.ExternalClass,.ExternalClass p,.ExternalClass span,.ExternalClass font,.ExternalClass td,.ExternalClass div{line-height:150%}a{text-decoration:none}*{color:inherit}a[x-apple-data-detectors],u+#body a,#MessageViewBody a{color:inherit;text-decoration:none;font-size:inherit;font-family:inherit;font-weight:inherit;line-height:inherit}img{-ms-interpolation-mode:bicubic}table:not([class^=s-]){font-family:Helvetica,Arial,sans-serif;mso-table-lspace:0pt;mso-table-rspace:0pt;border-spacing:0px;border-collapse:collapse}table:not([class^=s-]) td{border-spacing:0px;border-collapse:collapse}@media screen and (max-width: 600px){.w-full,.w-full>tbody>tr>td{width:100% !important}.w-24,.w-24>tbody>tr>td{width:96px !important}.w-40,.w-40>tbody>tr>td{width:160px !important}.p-lg-10:not(table),.p-lg-10:not(.btn)>tbody>tr>td,.p-lg-10.btn td a{padding:0 !important}.p-3:not(table),.p-3:not(.btn)>tbody>tr>td,.p-3.btn td a{padding:12px !important}.p-6:not(table),.p-6:not(.btn)>tbody>tr>td,.p-6.btn td a{padding:24px !important}*[class*=s-lg-]>tbody>tr>td{font-size:0 !important;line-height:0 !important;height:0 !important}.s-4>tbody>tr>td{font-size:16px !important;line-height:16px !important;height:16px !important}.s-6>tbody>tr>td{font-size:24px !important;line-height:24px !important;height:24px !important}.s-10>tbody>tr>td{font-size:40px !important;line-height:40px !important;height:40px !important}}
+        /*Basics*/
+        body {
+            margin: 0px !important;
+            padding: 0px !important;
+            display: block !important;
+            min-width: 100% !important;
+            width: 100% !important;
+            -webkit-text-size-adjust: none;
+        }
+
+        table {
+            border-spacing: 0;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        table td {
+            border-collapse: collapse;
+            mso-line-height-rule: exactly;
+        }
+
+        td img {
+            -ms-interpolation-mode: bicubic;
+            width: auto;
+            max-width: auto;
+            height: auto;
+            margin: auto;
+            display: block !important;
+            border: 0px;
+        }
+
+        td p {
+            margin: 0;
+            padding: 0;
+        }
+
+        td div {
+            margin: 0;
+            padding: 0;
+        }
+
+        td a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /*Outlook*/
+        .ExternalClass {
+            width: 100%;
+        }
+
+        .ExternalClass,
+        .ExternalClass p,
+        .ExternalClass span,
+        .ExternalClass font,
+        .ExternalClass td,
+        .ExternalClass div {
+            line-height: inherit;
+        }
+
+        .ReadMsgBody {
+            width: 100%;
+            background-color: #ffffff;
+        }
+
+        /* iOS BLUE LINKS */
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+        }
+
+        /*Gmail blue links*/
+        u+#body a {
+            color: inherit;
+            text-decoration: none;
+            font-size: inherit;
+            font-family: inherit;
+            font-weight: inherit;
+            line-height: inherit;
+        }
+
+        /*Buttons fix*/
+        .undoreset a,
+        .undoreset a:hover {
+            text-decoration: none !important;
+        }
+
+        .yshortcuts a {
+            border-bottom: none !important;
+        }
+
+        .ios-footer a {
+            color: #aaaaaa !important;
+            text-decoration: none;
+        }
+
+        /*Responsive*/
+        @media screen and (max-width: 799px) {
+            table.row {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            td.row {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .img-responsive img {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                margin: auto;
+            }
+
+            .center-float {
+                float: none !important;
+                margin: auto !important;
+            }
+
+            .center-text {
+                text-align: center !important;
+            }
+
+            .container-padding {
+                width: 100% !important;
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+            }
+
+            .container-padding10 {
+                width: 100% !important;
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+
+            .hide-mobile {
+                display: none !important;
+            }
+
+            .menu-container {
+                text-align: center !important;
+            }
+
+            .autoheight {
+                height: auto !important;
+            }
+
+            .m-padding-10 {
+                margin: 10px 0 !important;
+            }
+
+            .m-padding-15 {
+                margin: 15px 0 !important;
+            }
+
+            .m-padding-20 {
+                margin: 20px 0 !important;
+            }
+
+            .m-padding-30 {
+                margin: 30px 0 !important;
+            }
+
+            .m-padding-40 {
+                margin: 40px 0 !important;
+            }
+
+            .m-padding-50 {
+                margin: 50px 0 !important;
+            }
+
+            .m-padding-60 {
+                margin: 60px 0 !important;
+            }
+
+            .m-padding-top10 {
+                margin: 30px 0 0 0 !important;
+            }
+
+            .m-padding-top15 {
+                margin: 15px 0 0 0 !important;
+            }
+
+            .m-padding-top20 {
+                margin: 20px 0 0 0 !important;
+            }
+
+            .m-padding-top30 {
+                margin: 30px 0 0 0 !important;
+            }
+
+            .m-padding-top40 {
+                margin: 40px 0 0 0 !important;
+            }
+
+            .m-padding-top50 {
+                margin: 50px 0 0 0 !important;
+            }
+
+            .m-padding-top60 {
+                margin: 60px 0 0 0 !important;
+            }
+
+            .m-height10 {
+                font-size: 10px !important;
+                line-height: 10px !important;
+                height: 10px !important;
+            }
+
+            .m-height15 {
+                font-size: 15px !important;
+                line-height: 15px !important;
+                height: 15px !important;
+            }
+
+            .m-height20 {
+                font-size: 20px !important;
+                line-height: 20px !important;
+                height: 20px !important;
+            }
+
+            .m-height25 {
+                font-size: 25px !important;
+                line-height: 25px !important;
+                height: 25px !important;
+            }
+
+            .m-height30 {
+                font-size: 30px !important;
+                line-height: 30px !important;
+                height: 30px !important;
+            }
+
+            .rwd-on-mobile {
+                display: inline-block !important;
+                padding: 5px;
+            }
+
+            .center-on-mobile {
+                text-align: center !important;
+            }
+        }
     </style>
+
 </head>
-<body class="bg-light" style="outline: 0; width: 100%; min-width: 100%; height: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; font-family: Helvetica, Arial, sans-serif; line-height: 24px; font-weight: normal; font-size: 16px; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; color: #000000; margin: 0; padding: 0; border-width: 0;" bgcolor="#f7fafc">
-<table class="bg-light body" valign="top" role="presentation" border="0" cellpadding="0" cellspacing="0" style="outline: 0; width: 100%; min-width: 100%; height: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; font-family: Helvetica, Arial, sans-serif; line-height: 24px; font-weight: normal; font-size: 16px; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; color: #000000; margin: 0; padding: 0; border-width: 0;" bgcolor="#f7fafc">
-    <tbody>
-    <tr>
-        <td valign="top" style="line-height: 24px; font-size: 16px; margin: 0;" align="left" bgcolor="#f7fafc">
-            <table class="container" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;">
-                <tbody>
-                <tr>
-                    <td align="center" style="line-height: 24px; font-size: 16px; margin: 0; padding: 0 16px;">
-                        <!--[if (gte mso 9)|(IE)]>
-                        <table align="center" role="presentation">
-                            <tbody>
-                            <tr>
-                                <td width="600">
-                        <![endif]-->
-                        <table align="center" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 600px; margin: 0 auto;">
-                            <tbody>
-                            <tr>
-                                <td style="line-height: 24px; font-size: 16px; margin: 0;" align="left">
-                                    <table class="s-10 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
-                                        <tbody>
-                                        <tr>
-                                            <td style="line-height: 40px; font-size: 40px; width: 100%; height: 40px; margin: 0;" align="left" width="100%" height="40">
-                                                &#160;
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <table class="ax-center" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
 
-                                    </table>
-                                    <table class="s-10 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
-                                        <tbody>
-                                        <tr>
-                                            <td style="line-height: 40px; font-size: 40px; width: 100%; height: 40px; margin: 0;" align="left" width="100%" height="40">
-                                                &#160;
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <table class="card p-6 p-lg-10 space-y-4" role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-radius: 6px; border-collapse: separate !important; width: 100%; overflow: hidden; border: 1px solid #e2e8f0;" bgcolor="#ffffff">
-                                        <tbody>
-                                        <tr>
-                                            <td style="line-height: 24px; font-size: 16px; width: 100%; margin: 0; padding: 40px;" align="left" bgcolor="#ffffff">
-                                                <h1 class="h3 fw-700" style="padding-top: 0; padding-bottom: 0; font-weight: 700 !important; vertical-align: baseline; font-size: 28px; line-height: 33.6px; margin: 0;" align="left">
-                                                    Password Reset Request for {{ $user->name }}
-                                                </h1>
-                                                <table class="s-4 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
-                                                    <tbody>
-                                                    <tr>
-                                                        <td style="line-height: 16px; font-size: 16px; width: 100%; height: 16px; margin: 0;" align="left" width="100%" height="16">
-                                                            &#160;
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
+<body
+    style="margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; width: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;"
+    bgcolor="#f0f0f0">
 
-                                                <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;" align="left">
-                                                    You have requested to reset your password. Click the following link to reset your password:
-                                                </p>
+    <span class="preheader-text"
+        style="color: transparent; height: 0; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; visibility: hidden; width: 0; display: none; mso-hide: all;"></span>
 
-                                                <a href="{{ $token }}">Reset Password</a>.
+    <div
+        style="display:none; font-size:0px; line-height:0px; max-height:0px; max-width:0px; opacity:0; overflow:hidden; visibility:hidden; mso-hide:all;">
+    </div>
 
-                                                <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;" align="left">
-                                                    If you did not request a password reset, you can safely ignore this email.
-                                                </p>
+    <table border="0" align="center" cellpadding="0" cellspacing="0" width="100%"
+        style="width:100%;max-width:100%;">
+        <tr><!-- Outer Table -->
+            <td align="center" bgcolor="#f0f0f0" data-composer>
 
-                                                <table class="s-4 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
-                                                    <tbody>
-                                                    <tr>
-                                                        <td style="line-height: 16px; font-size: 16px; width: 100%; height: 16px; margin: 0;" align="left" width="100%" height="16">
-                                                            &#160;
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <table class="s-10 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
-                                        <tbody>
-                                        <tr>
-                                            <td style="line-height: 40px; font-size: 40px; width: 100%; height: 40px; margin: 0;" align="left" width="100%" height="40">
-                                                &#160;
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <table class="ax-center" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
-                                        <tbody>
-                                        <tr>
+                <table border="0" align="center" cellpadding="0" cellspacing="0" role="presentation"
+                    width="100%" style="width:100%;max-width:100%;">
+                    <!-- lotus-header-4 -->
+                    <tr>
+                        <td align="center" bgcolor="#343e9e" class="container-padding">
 
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <table class="s-6 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
-                                        <tbody>
-                                        <tr>
-                                            <td style="line-height: 24px; font-size: 24px; width: 100%; height: 24px; margin: 0;" align="left" width="100%" height="24">
-                                                &#160;
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <div class="text-muted text-center" style="color: #718096;" align="center">
-                                        Kenlight
-                                    </div>
-                                    <table class="s-6 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
-                                        <tbody>
-                                        <tr>
-                                            <td style="line-height: 24px; font-size: 24px; width: 100%; height: 24px; margin: 0;" align="left" width="100%" height="24">
-                                                &#160;
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
+                            <!-- Content -->
+                            <table border="0" align="center" cellpadding="0" cellspacing="0"
+                                role="presentation" class="row" width="580"
+                                style="width:580px;max-width:580px;">
+                                <tr>
+                                    <td height="40" style="font-size:40px;line-height:40px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td align="center">
+                                        <!-- Logo & Webview -->
+                                        <table border="0" align="center" cellpadding="0" cellspacing="0"
+                                            role="presentation" width="100%" style="width:100%;max-width:100%;">
+                                            <tr>
+                                                <td align="center" class="container-padding">
+
+                                                    <!--[if (gte mso 9)|(IE)]><table border="0" cellpadding="0" cellspacing="0" dir="rtl"><tr><td><![endif]-->
+
+
+
+                                                    <!--[if (gte mso 9)|(IE)]></td><td><![endif]-->
+
+                                                    <!-- gap -->
+                                                    <table border="0" align="right" cellpadding="0"
+                                                        cellspacing="0" role="presentation" class="row"
+                                                        width="20" style="width:20px;max-width:20px;">
+                                                        <tr>
+                                                            <td height="20"
+                                                                style="font-size:20px;line-height:20px;">&nbsp;</td>
+                                                        </tr>
+                                                    </table>
+                                                    <!-- gap -->
+
+                                                    <!--[if (gte mso 9)|(IE)]></td><td><![endif]-->
+
+                                                    <!-- column -->
+                                                    <table border="0" align="right" cellpadding="0"
+                                                        cellspacing="0" role="presentation" class="row"
+                                                        width="280" style="width:280px;max-width:280px;">
+                                                        <tr>
+                                                            <td align="left" class="center-text">
+                                                                <a href="{{ url('/') }}"><img
+                                                                        style="width:72px;border:0px;display: inline!important;"
+                                                                        src="{{ config('pleb.mail.top_logo') }}"
+                                                                        width="72" border="0"
+                                                                        alt="{{ config('app.name') }}"></a>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    <!-- column -->
+
+                                                    <!--[if (gte mso 9)|(IE)]></td></tr></table><![endif]-->
+
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <!-- Logo & Webview -->
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td height="40" style="font-size:40px;line-height:40px;">&nbsp;</td>
+                                </tr>
+                                {{-- <tr  >
+                                <td align="center" class="center-text">
+                                    <img style="width:190px;border:0px;display: inline!important;" src="{{ asset('assets/img/emails/Email-4_Intro.png') }}" width="190" border="0"       alt="intro">
                                 </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                            </tr> --}}
+                                <tr>
+                                    <td height="40" style="font-size:40px;line-height:40px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td class="center-text" align="center"
+                                        style="font-family:'Roboto Slab',Arial,Helvetica,sans-serif;font-size:42px;line-height:52px;font-weight:400;font-style:normal;color:#FFFFFF;text-decoration:none;letter-spacing:0px;">
 
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </td>
-    </tr>
-    </tbody>
-</table>
+                                        <div>
+                                            <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;"
+                                                align="left">
+                                                You have requested to reset your password. Click the following link to
+                                                reset your password:
+                                            </p>
+                                        </div>
+
+
+
+
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td height="20" style="font-size:20px;line-height:20px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td class="center-text" align="center"
+                                        style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;font-weight:300;font-style:normal;color:#FFFFFF;text-decoration:none;letter-spacing:0px;">
+
+                                        <div>
+
+                                            <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;"
+                                                align="left">
+                                                If you did not request a password reset, you can safely ignore this
+                                                email.
+                                            </p>
+                                        </div>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td height="40" style="font-size:40px;line-height:40px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td align="center">
+                                        <!-- Header Button -->
+                                        <table border="0" cellspacing="0" cellpadding="0" role="presentation"
+                                            align="center" class="center-float">
+                                            <tr>
+                                                <td align="center" bgcolor="#d6df58" style="border-radius: 6px;">
+                                                    <!--[if (gte mso 9)|(IE)]>
+                                                <table border="0" cellpadding="0" cellspacing="0" align="center">
+                                                    <tr>
+                                                        <td align="center" width="50"></td>
+                                                        <td align="center" height="50" style="height:50px;">
+                                                <![endif]-->
+
+
+                                                    <a href="{{ $token }}" target="_blank"
+                                                        style="font-family:'Roboto Slab',Arial,Helvetica,sans-serif;font-size:16px;line-height:19px;font-weight:700;font-style:normal;color:#000000;text-decoration:none;letter-spacing:0px;padding: 20px 50px 20px 50px;display: inline-block;"><span>Reset Link</span></a>
+
+                                                    <!--[if (gte mso 9)|(IE)]>
+                                                </td>
+                                                <td align="center" width="50"></td>
+                                                </tr>
+                                                </table>
+                                                <![endif]-->
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <!-- Header Button -->
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td height="40" style="font-size:40px;line-height:40px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <!-- Content -->
+
+                        </td>
+                    </tr>
+                </table>
+
+                <table border="0" align="center" cellpadding="0" cellspacing="0" role="presentation"
+                    width="100%" style="width:100%;max-width:100%;">
+                    <!-- lotus-footer-4 -->
+                    <tr>
+                        <td align="center" bgcolor="#f0f0f0" class="container-padding">
+
+                            <!-- Content -->
+                            <table border="0" align="center" cellpadding="0" cellspacing="0"
+                                role="presentation" class="row" width="580"
+                                style="width:580px;max-width:580px;">
+                                <tr>
+                                    <td height="50" style="font-size:50px;line-height:50px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td align="center">
+                                        <!-- Social Icons -->
+                                        <table border="0" align="center" cellpadding="0" cellspacing="0"
+                                            role="presentation" width="100%" style="width:100%;max-width:100%;">
+                                            <tr>
+                                                <td align="center">
+                                                    <table border="0" align="center" cellpadding="0"
+                                                        cellspacing="0" role="presentation">
+                                                        <tr>
+                                                            <td class="rwd-on-mobile" align="center" valign="middle"
+                                                                height="36" style="height: 36px;">
+                                                                @if (config('pleb.mail.instagram_url') != '')
+                                                                    <table border="0" align="center"
+                                                                        cellpadding="0" cellspacing="0"
+                                                                        role="presentation">
+                                                                        <tr>
+                                                                            <td width="10"></td>
+                                                                            <td align="center">
+                                                                                <a
+                                                                                    href="{{ config('pleb.mail.facebook_url') }}"><img
+                                                                                        style="width:36px;border:0px;display: inline!important;"
+                                                                                        src="{{ asset('assets/img/emails/Facebook.png') }}"
+                                                                                        width="36" border="0"
+                                                                                        alt="icon"></a>
+                                                                            </td>
+                                                                            <td width="10"></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                @endif
+                                                            </td>
+                                                            <td class="rwd-on-mobile" align="center" valign="middle"
+                                                                height="36" style="height: 36px;">
+                                                                @if (config('pleb.mail.instagram_url') != '')
+                                                                    <table border="0" align="center"
+                                                                        cellpadding="0" cellspacing="0"
+                                                                        role="presentation">
+                                                                        <tr>
+                                                                            <td width="10"></td>
+                                                                            <td align="center">
+                                                                                <a
+                                                                                    href="{{ config('pleb.mail.instagram_url') }}"><img
+                                                                                        style="width:36px;border:0px;display: inline!important;"
+                                                                                        src="{{ asset('assets/img/emails/Instagram.png') }}"
+                                                                                        width="36" border="0"
+                                                                                        alt="icon"></a>
+                                                                            </td>
+                                                                            <td width="10"></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                @endif
+                                                            </td>
+                                                            <td class="rwd-on-mobile" align="center" valign="middle"
+                                                                height="36" style="height: 36px;">
+                                                                @if (config('pleb.mail.twitter_url') != '')
+                                                                    <table border="0" align="center"
+                                                                        cellpadding="0" cellspacing="0"
+                                                                        role="presentation">
+                                                                        <tr>
+                                                                            <td width="10"></td>
+                                                                            <td align="center">
+                                                                                <a
+                                                                                    href="{{ config('pleb.mail.twitter_url') }}"><img
+                                                                                        style="width:36px;border:0px;display: inline!important;"
+                                                                                        src="{{ asset('assets/img/emails/Twitter.png') }}"
+                                                                                        width="36" border="0"
+                                                                                        alt="icon"></a>
+                                                                            </td>
+                                                                            <td width="10"></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                @endif
+                                                            </td>
+                                                            <td class="rwd-on-mobile" align="center" valign="middle"
+                                                                height="36" style="height: 36px;">
+                                                                @if (config('pleb.mail.pinterest_url') != '')
+                                                                    <table border="0" align="center"
+                                                                        cellpadding="0" cellspacing="0"
+                                                                        role="presentation">
+                                                                        <tr>
+                                                                            <td width="10"></td>
+                                                                            <td align="center">
+                                                                                <a
+                                                                                    href="{{ config('pleb.mail.pinterest_url') }}"><img
+                                                                                        style="width:36px;border:0px;display: inline!important;"
+                                                                                        src="{{ asset('assets/img/emails/Pinterest.png') }}"
+                                                                                        width="36" border="0"
+                                                                                        alt="icon"></a>
+                                                                            </td>
+                                                                            <td width="10"></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <!-- Social Icons -->
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td height="30" style="font-size:30px;line-height:30px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td class="center-text" align="center"
+                                        style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;line-height:24px;font-weight:400;font-style:normal;color:#6e6e6e;text-decoration:none;letter-spacing:0px;">
+
+                                        <div>
+                                            {{ config('pleb.mail.street_address') }}
+                                        </div>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="center-text" align="center"
+                                        style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;line-height:24px;font-weight:400;font-style:normal;color:#6e6e6e;text-decoration:none;letter-spacing:0px;">
+
+                                        <a href="tel:{{ config('pleb.mail.phone_number') }}"
+                                            style="color:#6e6e6e;"><span>{{ config('pleb.mail.phone_number') }}</span></a>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="center-text" align="center"
+                                        style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;line-height:24px;font-weight:400;font-style:normal;color:#6e6e6e;text-decoration:none;letter-spacing:0px;">
+
+                                        <a href="mailto:{{ config('pleb.mail.info_email') }}"
+                                            style="color:#6e6e6e;"><span>{{ config('pleb.mail.info_email') }}</span></a>
+                                        - <a href="{{ url('/') }}"
+                                            style="color:#6e6e6e;"><span>{{ url('/') }}</span></a>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td height="30" style="font-size:30px;line-height:30px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td align="center">
+                                        @if (config('pleb.mail.play_url') != '' || config('pleb.mail.ios_url') != '')
+                                            <!-- Buttons -->
+                                            <table border="0" align="center" cellpadding="0" cellspacing="0"
+                                                role="presentation" class="row" width="100%"
+                                                style="width:100%;max-width:100%;">
+                                                <tr>
+                                                    <td align="center">
+                                                        <!-- column -->
+                                                        <table border="0" align="center" cellpadding="0"
+                                                            cellspacing="0" role="presentation">
+                                                            <tr>
+                                                                <td align="center">
+                                                                    <a href="{{ config('pleb.mail.ios_url') }}"><img
+                                                                            style="display:block;width:100%;max-width:117px;border:0px;"
+                                                                            width="117"
+                                                                            src="{{ asset('assets/img/emails/App-Store.png') }}"
+                                                                            border="0" alt="icon"></a>
+                                                                </td>
+                                                                <td width="10" style="width: 10px;"></td>
+                                                                <td align="center">
+                                                                    <a href="{{ config('pleb.mail.play_url') }}"><img
+                                                                            style="display:block;width:100%;max-width:117px;border:0px;"
+                                                                            width="117"
+                                                                            src="{{ asset('assets/img/emails/Google-play.png') }}"
+                                                                            border="0" alt="icon"></a>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                        <!-- column -->
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <!-- Buttons -->
+                                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td height="30" style="font-size:30px;line-height:30px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td align="center">
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td height="50" style="font-size:50px;line-height:50px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <!-- Content -->
+
+                        </td>
+                    </tr>
+                </table>
+
+            </td>
+        </tr><!-- Outer-Table -->
+    </table>
+
 </body>
+
 </html>

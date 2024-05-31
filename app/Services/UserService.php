@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\GenerateAvatar;
 use App\Models\Units;
 use App\Models\User;
 use App\Models\UserDetails;
@@ -27,6 +28,7 @@ class UserService
                 'email' => 'required|email|unique:users',
                 'first_name' => 'string|required',
                 'last_name' => 'string|required',
+                'company_id' => 'required|exists:companies,id',
             ]);
 
             $userRoles = $data['userRoles'];
@@ -41,7 +43,7 @@ class UserService
 
             $userCount = $company->users()->count();
 
-            if ($userCount >= 20) {
+            if ($userCount >= 80) {
                 return response()->json(['error' => 'Maximum number of users reached for this company'], 403);
             }
 
@@ -64,14 +66,14 @@ class UserService
 
             $user->authType = 'otp';
             $user->status = 'inactive';
-            $user->company_id = $company->id;
+            $user->company_id = $request->input('company_id');
 
             $user->save();
 
             $usernameBase = substr(Str::slug($request->input('first_name')), 0, 3);
             $username = $this->generateUniqueUsername($usernameBase);
 
-            UserDetails::create([
+            $userDetails = UserDetails::create([
                 'user_id' => $user->id,
                 'first_name' => $request->input('first_name'),
                 'middle_name' => $request->input('middle_name'),
@@ -80,9 +82,14 @@ class UserService
                 'is_verified' => 'false',
             ]);
 
+            if (!$userDetails->profileImage) {
+                GenerateAvatar::dispatch($userDetails);
+            }
+
             RoleService::assignDefaultRole($user, 'user');
 
-            return response()->json(['success' => 'User created successfully.'], 200);
+            return $user;
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500, [], JSON_UNESCAPED_UNICODE);
         }
@@ -185,20 +192,24 @@ class UserService
             $usernameBase = substr(Str::slug($request->input('first_name')), 0, 3);
             $username = $this->generateUniqueUsername($usernameBase);
 
-            $tenant = new UserDetails();
-            $tenant->user_id = $newTenant->id;
-            $tenant->first_name = $request->input('first_name');
-            $tenant->middle_name = $request->input('middle_name');
-            $tenant->last_name = $request->input('last_name');
-            $tenant->phone = $request->input('phone');
-            $tenant->is_verified = "false";
-            $tenant->username = $username;
-            $tenant->date_of_birth = $request->input('date_of_birth');
-            $tenant->id_number = $request->input('id_number');
-            $tenant->country = $request->input('country');
-            $tenant->gender = $request->input('gender');
+            $userDetails = new UserDetails();
+            $userDetails->user_id = $newTenant->id;
+            $userDetails->first_name = $request->input('first_name');
+            $userDetails->middle_name = $request->input('middle_name');
+            $userDetails->last_name = $request->input('last_name');
+            $userDetails->phone = $request->input('phone');
+            $userDetails->is_verified = "false";
+            $userDetails->username = $username;
+            $userDetails->date_of_birth = $request->input('date_of_birth');
+            $userDetails->id_number = $request->input('id_number');
+            $userDetails->country = $request->input('country');
+            $userDetails->gender = $request->input('gender');
 
-            $tenant->save();
+            $userDetails->save();
+
+
+            GenerateAvatar::dispatch($userDetails)->onQueue('avatars');
+
 
             try {
                 $unit = Units::where('unit_name', $unit)->firstOrFail();
@@ -220,4 +231,7 @@ class UserService
             return response()->json(['error' => 'Failed to create tenant'], 500);
         }
     }
+
+
+
 }

@@ -3,12 +3,18 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NewAccount;
+use App\Models\Company;
+use App\Models\NewUserSession;
 use App\Models\Roles;
 use App\Models\User;
+use App\Services\CompressionService;
 use App\Services\UserService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -52,20 +58,30 @@ class UserController extends Controller
         }
     }
 
-
-
     public function storeNewUser(Request $request)
     {
         $data = $this->loadCommonData($request);
 
-        $response = $this->userService->createUser($request , $data );
+        $response = $this->userService->createUser($request, $data);
 
         if ($response instanceof User) {
-            $user = $response;
             try {
-                // Uncomment the following lines once you have the necessary imports and implementations
-                // $company = Company::findOrFail($validatedData['company_id']);
-                // Mail::to($validatedData['email'])->send(new NewAccount($user, $company));
+                $request->validate([
+                    'company_id' => 'required|exists:companies,id',
+                ]);
+
+                $compressionService = new CompressionService();
+                $compressedEmail = $compressionService->compressAttribute($request->input('email'));
+
+                $user = User::where('email', $compressedEmail)->first();
+
+                $user->update(['' => null,]);
+
+
+                $company = Company::findOrFail($request->input('company_id'));
+
+                $this->sendNewAccountEmail($user, $company);
+
                 return response()->json(['success' => 'User Created Successfully'], 200);
             } catch (ModelNotFoundException $e) {
                 return response()->json(['error' => 'Company not found.'], 404);
@@ -75,28 +91,24 @@ class UserController extends Controller
         }
     }
 
-    public function editUser(Request $request)
+    private function sendNewAccountEmail(User $user, Company $company)
     {
-        $data = $this->loadCommonData($request);
-        return view('pages.User.profile.profile', $data);
-    }
+        //$authToken = sha1($user->id);
 
-    public function userSettings(Request $request)
-    {
-        $data = $this->loadCommonData($request);
-        return view('pages.User.profile.settings', $data);
-    }
+        $authLink = str_replace('.', '_', base64_encode($user->id . '|' . now()->timestamp . '|' . Str::random(40)));
 
-    public function userSecurity(Request $request)
-    {
-        $data = $this->loadCommonData($request);
-        return view('pages.User.profile.security', $data);
-    }
 
-    public function userDeactivate(Request $request)
-    {
-        $data = $this->loadCommonData($request);
-        return view('pages.User.profile.deactivate', $data);
+
+        NewUserSession::create([
+            'email' => $user->email,
+            'token' => $authLink,
+            //'otp_code' => $authToken,
+        ]);
+
+        $resetLink = 'http://localhost:5173/auth/new-account/' . $authLink;
+
+        Mail::to($user->email)->queue(new NewAccount($user, $company, $resetLink));
+
     }
 
     public function updateUser(Request $request)

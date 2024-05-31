@@ -48,6 +48,7 @@ class RoleController extends Controller
             $role->status = 'inactive';
             $role->slug = Str::slug($validatedData['name'], '-');
             $role->save();
+            
 
             return response()->json(['success' => 'Role created successfully'], 201);
 

@@ -2,9 +2,7 @@
 
 namespace App\Traits;
 
-use App\Models\Units;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 
 trait AuthTrait
 {
@@ -31,36 +29,37 @@ trait AuthTrait
         // Generate refresh token (assuming you have a separate function for this)
         $refreshToken = $this->generateRefreshToken($user);
 
-        if (!$user->password) {
-            return response()->json([
-                'message' => 'You need to set a password first.',
-            ]);
-        }
+       
+        return response()->json([
+            'message' => 'Success',
+            'token' => $accessToken,
+            'refresh_token' => $refreshToken,
+        ]);
 
-        if ($roles->contains('admin') || $roles->contains('sudo') || $roles->contains('landlord')) {
-            return response()->json([
-                'message' => 'Success',
-                'token' => $accessToken,
-                'refresh_token' => $refreshToken,
-            ]);
-        }
+        // if ($roles->contains('admin') || $roles->contains('sudo') || $roles->contains('landlord')) {
+        //     return response()->json([
+        //         'message' => 'Success',
+        //         'token' => $accessToken,
+        //         'refresh_token' => $refreshToken,
+        //     ]);
+        // }
 
-        if ($roles->contains('tenant')) {
-            $tenantId = $user->id;
-            $unit = Units::where('tenant_id', $tenantId)->first();
+        // if ($roles->contains('tenant') || $roles->contains('user') || $roles->contains('agent')) {
+        //     $tenantId = $user->id;
+        //     $unit = Units::where('tenant_id', $tenantId)->first();
 
-            if ($unit && $unit->home) {
-                return response()->json([
-                    'message' => 'Success',
-                    'token' => $accessToken,
-                    'refresh_token' => $refreshToken,
-                ]);
-            } else {
-                return response()->json([
-                    'error' => 'Not Allowed. Please Contact The Admin on the issue',
-                ], 500);
-            }
-        }
+        //     if ($unit && $unit->home) {
+        //         return response()->json([
+        //             'message' => 'Success',
+        //             'token' => $accessToken,
+        //             'refresh_token' => $refreshToken,
+        //         ]);
+        //     } else {
+        //         return response()->json([
+        //             'error' => 'Not Allowed. Please Contact The Admin on the issue',
+        //         ], 500);
+        //     }
+        // }
 
         return response()->json(['error' => 'Unauthorized Access'], 403);
     }
