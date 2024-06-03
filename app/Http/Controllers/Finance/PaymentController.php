@@ -112,7 +112,6 @@ class PaymentController extends Controller
 
 
 
-
     public function stkCallback(){
         dd("This is being Accessed");
         $data=file_get_contents('php://input');

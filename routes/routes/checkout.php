@@ -18,7 +18,7 @@ Route::group(['middleware' => ['token']], function () {
         Route::post('/confirmation', [PaymentController::class, 'Confirmation'])->name('confirmation');
         Route::get('/simulate', [PaymentController::class, 'Simulate'])->name('simulate');
         Route::get('/qrcode', [PaymentController::class, 'qrcode'])->name('qrcode');
-        Route::get('/remove-to-cart', [CheckoutController::class, 'RemoveFromCart'])->name('RemoveFromCart');
+
 
     });
 });
