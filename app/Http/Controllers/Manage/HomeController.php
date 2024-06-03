@@ -9,13 +9,13 @@ use App\Models\PaymentType;
 use App\Models\unitRecords;
 use App\Models\Units;
 use App\Models\User;
-use App\Models\UserDetails;
 use App\Services\CompressionService;
 use App\Traits\ImageTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 
 class HomeController extends Controller
 {
@@ -193,52 +193,36 @@ class HomeController extends Controller
         }
     }
 
-    public function createHome(Request $request)
-    {
-        $data = $this->loadCommonData($request);
-        $company = $data['company'];
-
-        $users = UserDetails::whereHas('user.roles', function ($query) {
-            $query->where('name', 'agent');
-        })->whereHas('user', function ($query) use ($company) {
-            $query->where('company_id', $company->id);
-        })->selectRaw("CONCAT(first_name, ' ', middle_name, ' ', last_name) AS full_name, user_id")->pluck('full_name', 'user_id');
-
-        $decompressedUsers = $users;
-
-        return view('pages.Management.create', compact('decompressedUsers') + $data);
-    }
 
     public function storeHome(Request $request)
     {
+        // Assuming $data['company'], $data['user'] are loaded in loadCommonData method
         $data = $this->loadCommonData($request);
-        try {
 
+        try {
             $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|min:10',
-
+                'images' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
-
-            DB::beginTransaction();
 
             $company = $data['company'];
 
             $subscriptionCheck = $this->checkSubscription($company);
             if ($subscriptionCheck) {
-                return $subscriptionCheck;
+                return response()->json(['error' => $subscriptionCheck], 400);
             }
 
             if (strlen($request->input('phone')) < 10) {
-                return redirect()->back()->with('error', 'Phone number must have at least 10 characters');
+                return response()->json(['error' => 'Phone number must have at least 10 characters'], 400);
             }
 
             if (Home::where('phone', $request->input('phone'))->exists()) {
-                return redirect()->back()->with('error', 'Phone number already exists');
+                return response()->json(['error' => 'Phone number already exists'], 400);
             }
 
             if (Home::where('email', $request->input('email'))->exists()) {
-                return redirect()->back()->with('error', 'Email already exists');
+                return response()->json(['error' => 'Email already exists'], 400);
             }
 
             $ownerId = $data['user'];
@@ -247,20 +231,14 @@ class HomeController extends Controller
                 $company->update(['status' => 'active']);
             }
 
-            // Store uploaded images
-            $imagePaths = [];
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
-                    $imagePath = 'storage/' . $image->store('HomeImage', 'public');
-                    $imagePaths[] = $imagePath;
-                }
-            }
+            // Upload image to Cloudinary
+            $image = $request->file('images');
+            $uploadedImageUrl = Cloudinary::upload($image->getRealPath())->getSecurePath();
 
             $home = Home::create([
                 'name' => $request->input('name'),
                 'location' => $request->input('location'),
                 'houseCategory' => $request->input('houseCategory'),
-                'images' => json_encode($imagePaths),
                 'stories' => $request->input('stories'),
                 'status' => 'available',
                 'description' => $request->input('description'),
@@ -270,6 +248,7 @@ class HomeController extends Controller
                 'slug' => Str::slug($request->input('name'), '-') . '-' . (Home::count() + 1),
                 'landlord_id' => $ownerId->id,
                 'agent_id' => $request->input('agent_id'),
+                'images' => $uploadedImageUrl, // Assign the Cloudinary URL to 'images' field
             ]);
 
             // Create units
@@ -293,13 +272,10 @@ class HomeController extends Controller
 
             Units::insert($units);
 
-            DB::commit();
-
-            return redirect()->back()->with('success', 'Home and units stored successfully');
+            return response()->json(['success' => 'Home and units stored successfully'], 201);
         } catch (\Exception $e) {
             //Rollback the transaction in case of an error
-            DB::rollBack();
-            return back()->with('error', 'Failed to store home and units :' . $e->getMessage());
+            return response()->json(['error' => 'Failed to store home and units: ' . $e->getMessage()], 500);
         }
     }
 

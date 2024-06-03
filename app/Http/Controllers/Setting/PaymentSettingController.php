@@ -5,28 +5,38 @@ namespace App\Http\Controllers\Setting;
 use App\Http\Controllers\Controller;
 use App\Models\HomePaymentTypes;
 use App\Models\PaymentType;
-use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PaymentSettingController extends Controller
 {
 
-    public function paymentSetting(Request $request)
+    public function paymentModeTypes(Request $request)
     {
-        $data = $this->loadCommonData($request);
-        $payments = PaymentType::all();
-
-        return view('pages.Setting.Payment.payments', compact('payments') + $data);
+        try {
+            $data = $this->loadCommonData($request);
+            $payments = PaymentType::all();
+            return response()->json([
+                'payments' => $payments,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to get payments',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function deactivatePayment($dummy, $deactivate = null)
+    public function deactivatePayment($deactivate = null)
     {
         try {
             $payment = PaymentType::find($deactivate);
 
             if (!$payment) {
-                return redirect()->back()->with('error', 'Payment type not found.');
+                return response()->json([
+                    'error' => 'Payment type not found.',
+                ]);
             }
 
             $newStatus = $payment->status === 'active' ? 'inactive' : 'active';
@@ -37,17 +47,15 @@ class PaymentSettingController extends Controller
 
             $successMessage = $newStatus === 'inactive' ? 'Payment type deactivated successfully.' : 'Payment type activated successfully.';
 
-            return redirect()->back()->with('success', $successMessage);
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to deactivate/activate Payment type. Please try again.');
+            return response()->json([
+                'message' => $successMessage,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to Deactivate / Activate payments',
+                'message' => $e->getMessage(),
+            ], 500);
         }
-    }
-
-    public function createPayment(Request $request)
-    {
-        $data = $this->loadCommonData($request);
-
-        return view('pages.Setting.Payment.create',  $data);
     }
 
     public function storePayment(Request $request)
@@ -59,29 +67,24 @@ class PaymentSettingController extends Controller
             ]);
 
             $paymentId = PaymentType::count() + 1;
-            $slug = Str::slug($request->input('name'), '-') . '-' .  $paymentId;
+            $slug = Str::slug($request->input('name'), '-') . '-' . $paymentId;
 
             $paymentType = new PaymentType();
             $paymentType->name = $request->name;
             $paymentType->status = 'active';
             $paymentType->slug = $slug;
 
-
             $paymentType->save();
 
-             return redirect()->back()->with('success', 'Payment type created successfully.');
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create Payment type. Please try again.');
+            return response()->json([
+                'message' => 'Payment Created Successfully ',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to Create payments',
+                'message' => $e->getMessage(),
+            ], 500);
         }
-    }
-
-    public function editPayment(Request $request, $dummy, $payment)
-    {
-        $data = $this->loadCommonData($request);
-
-        $paymentType = PaymentType::where('slug', $payment)->firstOrFail();
-
-        return view('pages.Setting.Payment.edit', compact('paymentType') + $data);
     }
 
     public function updatePayment(Request $request, $dummy, $payment)
@@ -101,7 +104,6 @@ class PaymentSettingController extends Controller
             return redirect()->back()->with('error', 'Failed to update Payment type. Please try again.');
         }
     }
-
 
     public function createCompanyPayment(Request $request, $dummy, $paymentId)
     {
@@ -133,7 +135,7 @@ class PaymentSettingController extends Controller
         }
     }
 
-    public function deletePaymentAction( $dummy, $paymentId )
+    public function deletePaymentAction($dummy, $paymentId)
     {
 
         try {
@@ -147,20 +149,28 @@ class PaymentSettingController extends Controller
         }
     }
 
-
-    public function deleteThisPayment( $dummy, $payment )
+    public function deleteThisPayment($payment)
     {
         try {
-            $payments = PaymentType::where('id', $payment)->firstOrFail();
+            $paymentType = PaymentType::findOrFail($payment);
 
-            $payments->delete();
-            return redirect()->back()->with('success', 'Payment deleted successfully.');
+            if ($paymentType->status === 'active') {
+                return response()->json([
+                    'error' => 'Payment type is active and cannot be deleted.',
+                ], 400);
+            }
+
+            $paymentType->delete();
+
+            return response()->json([
+                'message' => 'Payment deleted Successfully ',
+            ]);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to delete Payment: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to delete payments',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
-
-
-
 
 }

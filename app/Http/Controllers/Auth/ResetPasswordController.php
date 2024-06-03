@@ -3,14 +3,21 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ForgotPassword;
+use App\Models\PasswordResetToken;
 use App\Models\User;
+use App\Services\CompressionService;
+use App\Traits\AuthTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class ResetPasswordController extends Controller
 {
+    use AuthTrait;
+
     public function updateSecurity(Request $request)
     {
         try {
@@ -105,60 +112,93 @@ class ResetPasswordController extends Controller
     public function sendResetPasswordEmail(Request $request)
     {
         try {
-            $data = $request->all(); // Assuming data is sent as JSON
+            $data = $request->all();
 
-            // Find user by email
-            $user = User::where('email', $data['email'])->first();
+            $compressionService = new CompressionService();
+            $compressedEmail = $compressionService->compressAttribute($data['email']);
+
+            $user = User::where('email', $compressedEmail)->first();
 
             if (!$user) {
                 return response()->json(['error' => 'User not found.'], 404);
             }
 
             if ($user->two_fa_status === 'active') {
-                $user->two_fa_status === 'inactive';
+                $user->two_fa_status = 'inactive';
+                $user->save();
             }
 
-            // Generate JWT token
-            $token = JWTAuth::fromUser($user, ['exp' => now()->addHours(24)->timestamp]);
+            // Generate unique token
+            $token = str_replace('.', '_', base64_encode($user->id . '|' . now()->timestamp . '|' . Str::random(40)));
 
-            // Mail::to($user->email)->send(new ForgotPassword($user, $token));
+            PasswordResetToken::create([
+                'email' => $user->email,
+                'token' => $token,
+            ]);
 
-            return response()->json(['message' => 'Password reset email sent successfully. Please check your inbox.'], 200);
+            $resetLink = 'http://localhost:5173/auth/new-password/' . $token;
+
+            Mail::to($user->email)->queue((new ForgotPassword($user, $resetLink)));
+
+            return response()->json(['success' => 'Password reset email sent successfully. Please check your inbox.'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to send password reset email: ' . $e->getMessage()], 500);
         }
     }
 
-    public function passwordReset(Request $request, $token)
-    {
-        // This method can remain unchanged as it's returning a view for resetting the password
-        return view('auth.reset-password', compact('token'));
-    }
-
     public function newPassword(Request $request, $token)
     {
         try {
-            $tokenPayload = $this->decodeToken($token);
-            $userId = $tokenPayload->get('sub');
+            $request->validate([
+                'newPassword' => 'required|min:6',
+                'confirmPassword' => 'required|same:newPassword',
+                'authStatus' => 'required',
+            ]);
 
-            $user = User::find($userId);
+            $newPassword = $request->input('newPassword');
+            $authStatus = $request->input('authStatus');
 
-            if (!$user) {
-                return response()->json(['error' => 'User not found or invalid token.'], 404);
+            if (isset($authStatus) && $authStatus === 'authOn') {
+
+                $data = $this->loadCommonData($request);
+                $loggedInUser = $data['user'];
+
+                $loggedInUser->password = Hash::make($newPassword);
+                $loggedInUser->save();
+
+                return response()->json(['success' => 'Password updated successfully.'], 200);
+
+            } elseif (isset($authStatus) && $authStatus === 'authOff') {
+
+                // Find the token in the database
+                $tokenData = PasswordResetToken::where('token', $token)->first();
+
+                if (!$tokenData) {
+                    return response()->json(['error' => 'Invalid or expired token.'], 400);
+                }
+
+                $compressionService = new CompressionService();
+                $compressedEmail = $compressionService->compressAttribute($tokenData->email);
+
+                $user = User::where('email', $compressedEmail)->first();
+
+                if (!$user) {
+                    return response()->json(['error' => 'User not found.'], 404);
+                }
+
+                $user->password = Hash::make($newPassword);
+                $user->save();
+
+                // Invalidate the token
+                $tokenData->delete();
+
+                return $this->handleAuthentication($user, $request);
+            } else {
+                return response()->json(['error' => 'Invalid authentication status.'], 400);
             }
-
-            $data = $request->all(); // Assuming data is sent as JSON
-
-            // Validation
-            // Note: Validation can also be performed using FormRequest classes
-
-            $user->password = Hash::make($data['newPassword']);
-
-            $user->save();
-
-            return response()->json(['success' => 'Password updated successfully.'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to update password: ' . $e->getMessage()], 500);
         }
     }
+
 }

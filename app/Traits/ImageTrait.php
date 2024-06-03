@@ -12,7 +12,7 @@ trait ImageTrait
         if ($request->hasFile($fieldName)) {
             $file = $request->file($fieldName);
             $uploadedFileUrl = $this->uploadImage($file);
-            $data[$fieldName] = $uploadedFileUrl;
+            $data->$fieldName = $uploadedFileUrl; 
         }
     }
 

@@ -7,24 +7,28 @@ use App\Models\Company;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class NewAccount extends Mailable
+class NewAccount extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public $user;
     public $company;
+    public $resetLink;
 
     /**
      * Create a new message instance.
      *
      * @param User $user
      * @param Company $company
+     * @param string $resetLink
      */
-    public function __construct(User $user, Company $company)
+    public function __construct(User $user, Company $company, $resetLink)
     {
         $this->user = $user;
         $this->company = $company;
+        $this->resetLink = $resetLink;
     }
 
     /**
@@ -34,26 +38,12 @@ class NewAccount extends Mailable
      */
     public function build()
     {
-        // Generate a unique token for one-time login
-        $uniqueId = uniqid($this->user->id, true);
-        $authToken = sha1($uniqueId);
-        $authLink = base64_encode($authToken . ':' . $uniqueId);
-
-        // Store the original token in the user's record
-        $this->user->otp = $authToken;
-        $this->user->save();
-
-        // Generate the login link using the encoded token
-        $loginLink = route('AuthNewUser', ['authLink' => $authLink]);
-
         return $this->subject('Welcome to ' . $this->company->name)
             ->view('emails.new_account')
             ->with([
                 'user' => $this->user,
                 'company' => $this->company,
-                'email' => $this->user->email,
-                'authLink' => $loginLink,
-                'customMessage' => 'Use that link to login to the system for the first time.',
+                'resetLink' => $this->resetLink,
             ]);
     }
 }

@@ -15,7 +15,6 @@ Route::group(['middleware' => ['token']], function () {
         Route::get('/home/{unit}', [HomeController::class, 'HomeProfile'])->name('HomeProfile');
 
         //Home
-        Route::get('/create-home', [HomeController::class, 'createHome'])->name('createHome');
         Route::post('/create-home', [HomeController::class, 'storeHome'])->name('storeHome');
         Route::get('/edit-home/{slug}', [HomeController::class, 'editHome'])->name('editHome');
         Route::post('/update-home/{slug}', [HomeController::class, 'storeEditedHome'])->name('storeEditedHome');

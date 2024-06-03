@@ -18,31 +18,6 @@ class Company extends Model
         'companyUrl','companyId'
     ];
 
-    public static function boot()
-    {
-        parent::boot();
-
-        static::retrieved(function ($company) {
-            $compressionService = app(CompressionService::class);
-            $compressionService->decompressModelAttributes($company);
-        });
-    }
-
-    protected function compressAttribute($key, $value, $compress = true)
-    {
-        if ($compress && in_array($key,  [
-        'email', 'address', 'phone',
-        'description', 'location',
-    ]))
-            return gzcompress($value);
-        return $value;
-    }
-
-    public function setAttribute($key, $value)
-    {
-        parent::setAttribute($key, $this->compressAttribute($key, $value));
-    }
-
     public function plan()
     {
         return $this->belongsTo(Plans::class);

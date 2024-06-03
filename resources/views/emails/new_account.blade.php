@@ -83,12 +83,12 @@
                                                     Welcome to {{ $company->name }}! You have requested a new account.
                                                 </p>
 
-                                                <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;" align="left" >
+                                                {{-- <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;" align="left" >
                                                     Your Account Email is: {{ $email }}
-                                                </p>
+                                                </p> --}}
 
                                                 <p style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;" align="left">
-                                                    Your One-Time Password (OTP) for the first login is <a href="{{ $authLink }}">Login</a>. Use this link to log in.
+                                                    Your One-Time Password (OTP) for the first login is <a href="{{ $resetLink }}">Login</a>. Use this link to log in.
                                                 </p>
 
 

@@ -4,32 +4,48 @@
 
 namespace App\Traits;
 
-use App\Models\User;
-use App\Models\UserDetails;
 use App\Models\Roles;
 use App\Services\CompressionService;
 use Illuminate\Http\Request;
 
 trait SearchTrait
 {
-    public function search(Request $request)
+    public function usersByRoleAndSearch(Request $request, $role)
     {
-        $keyword = $request->input('keyword');
+        try {
+            $keyword = $request->input('keyword');
+            $status = $request->input('status');
+            $page = $request->input('page', 1);
 
-        $query = User::query()->join('user_details', 'users.id', '=', 'user_details.user_id')->select('users.*');
+            $allRoles = Roles::all();
 
-        $allUsers = $query->latest();
+            $selectedRole = Roles::where('name', $role)->first();
 
-        if ($keyword) {
-            $compressionService = new CompressionService();
-            $compressedKeyword = $compressionService->compressAttribute($keyword);
+            if (!$selectedRole) {
+                return response()->json(['error' => 'Role not found'], 404);
+            }
 
-            $allUsers->where(function ($query) use ($keyword, $compressedKeyword) {
-                $query->whereRaw("CONCAT(user_details.first_name, ' ', user_details.middle_name, ' ', user_details.last_name) LIKE ?", ["%{$keyword}%"])
-                    ->orWhere('users.email', 'like', "%{$compressedKeyword}%");
-            });
+            $query = $selectedRole->users()->with('detail')->with('company')->with('roles');
+
+            if ($keyword) {
+                $compressionService = new CompressionService();
+                $compressedKeyword = $compressionService->compressAttribute($keyword);
+
+                $query->whereHas('detail', function ($q) use ($keyword) {
+                    $q->whereRaw("CONCAT(first_name, ' ', middle_name, ' ', last_name) LIKE ?", ["%{$keyword}%"]);
+                })->orWhere('email', 'like', "%{$compressedKeyword}%");
+            }
+
+            if ($status) {
+                $query->where('status', $status);
+            }
+
+            $roleList = $query->paginate(10, ['*'], 'page', $page);
+            $roleList->appends($request->only(['keyword', 'status', 'page']));
+
+            return response()->json(['roleList' => $roleList], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch roles: ' . $e->getMessage()], 500);
         }
-
-        return $allUsers;
     }
 }

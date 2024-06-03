@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
+use App\Jobs\GenerateAvatar;
 use App\Models\Units;
 use App\Models\User;
 use App\Models\UserDetails;
-use App\Traits\RoleRequirements;
 use App\Traits\ImageTrait;
+use App\Traits\RoleRequirements;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class UserService
 {
@@ -21,30 +21,32 @@ class UserService
         return $this->rolesThatMustHave($tier);
     }
 
-    public function createUser(Request $request)
+    public function createUser(Request $request, $data)
     {
-        list($user, $company, $userRoles) = $this->getUserAndCompany($request);
-
-        $request->validate([
-            'email' => 'required|email|unique:users',
-            'company_id' => 'required',
-            'first_name' => 'string|required',
-            'last_name' => 'string|required'
-        ]);
-
-        $requiredRolesLvTwo = $this->rolesThatMustHave(2);
-
-        if (count(array_intersect($requiredRolesLvTwo, $userRoles)) === 0) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        $userCount = $company->users()->count();
-
-        if ($userCount >= 20) {
-            return response()->json(['error' => 'Maximum number of users reached for this company'], 403);
-        }
-
         try {
+            $request->validate([
+                'email' => 'required|email|unique:users',
+                'first_name' => 'string|required',
+                'last_name' => 'string|required',
+                'company_id' => 'required|exists:companies,id',
+            ]);
+
+            $userRoles = $data['userRoles'];
+            $requiredRolesLvTwo = $this->rolesThatMustHave(2);
+
+            if (count(array_intersect($requiredRolesLvTwo, $userRoles)) === 0) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $company = $data['company'];
+            $user = $data['user'];
+
+            $userCount = $company->users()->count();
+
+            if ($userCount >= 80) {
+                return response()->json(['error' => 'Maximum number of users reached for this company'], 403);
+            }
+
             $compressionService = new CompressionService();
             $compressedEmail = $compressionService->compressAttribute($request->input('email'));
 
@@ -59,10 +61,7 @@ class UserService
             $user->fill([
                 'email' => $request->input('email'),
                 'company_id' => $request->input('company_id'),
-                'first_name' => $request->input('first_name'),
-                'last_name' => $request->input('last_name'),
                 'uuid' => Str::uuid(),
-                'newTenant' => 'inactive'
             ]);
 
             $user->authType = 'otp';
@@ -74,20 +73,25 @@ class UserService
             $usernameBase = substr(Str::slug($request->input('first_name')), 0, 3);
             $username = $this->generateUniqueUsername($usernameBase);
 
-            UserDetails::create([
+            $userDetails = UserDetails::create([
                 'user_id' => $user->id,
                 'first_name' => $request->input('first_name'),
                 'middle_name' => $request->input('middle_name'),
                 'last_name' => $request->input('last_name'),
                 'username' => $username,
-                'is_verified' => 'false'
+                'is_verified' => 'false',
             ]);
+
+            if (!$userDetails->profileImage) {
+                GenerateAvatar::dispatch($userDetails);
+            }
 
             RoleService::assignDefaultRole($user, 'user');
 
-            return response()->json($user, 201);
+            return $user;
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500, [], JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -102,14 +106,14 @@ class UserService
         return $username;
     }
 
-    public function updateUser(Request $request , $data)
+    public function updateUser(Request $request, $data)
     {
 
         try {
 
             $userData = $request->only([
                 'first_name', 'middle_name', 'last_name', 'date_of_birth', 'id_number',
-                'username', 'address', 'phone', 'gender', 'location','about_the_user',
+                'username', 'address', 'phone', 'gender', 'location', 'about_the_user',
             ]);
 
             $this->updateImage($request, $userData, 'profileImage');
@@ -188,20 +192,24 @@ class UserService
             $usernameBase = substr(Str::slug($request->input('first_name')), 0, 3);
             $username = $this->generateUniqueUsername($usernameBase);
 
-            $tenant = new UserDetails();
-            $tenant->user_id = $newTenant->id;
-            $tenant->first_name = $request->input('first_name');
-            $tenant->middle_name = $request->input('middle_name');
-            $tenant->last_name = $request->input('last_name');
-            $tenant->phone = $request->input('phone');
-            $tenant->is_verified = "false";
-            $tenant->username = $username;
-            $tenant->date_of_birth = $request->input('date_of_birth');
-            $tenant->id_number = $request->input('id_number');
-            $tenant->country = $request->input('country');
-            $tenant->gender = $request->input('gender');
+            $userDetails = new UserDetails();
+            $userDetails->user_id = $newTenant->id;
+            $userDetails->first_name = $request->input('first_name');
+            $userDetails->middle_name = $request->input('middle_name');
+            $userDetails->last_name = $request->input('last_name');
+            $userDetails->phone = $request->input('phone');
+            $userDetails->is_verified = "false";
+            $userDetails->username = $username;
+            $userDetails->date_of_birth = $request->input('date_of_birth');
+            $userDetails->id_number = $request->input('id_number');
+            $userDetails->country = $request->input('country');
+            $userDetails->gender = $request->input('gender');
 
-            $tenant->save();
+            $userDetails->save();
+
+
+            GenerateAvatar::dispatch($userDetails)->onQueue('avatars');
+
 
             try {
                 $unit = Units::where('unit_name', $unit)->firstOrFail();
@@ -223,4 +231,7 @@ class UserService
             return response()->json(['error' => 'Failed to create tenant'], 500);
         }
     }
+
+
+
 }

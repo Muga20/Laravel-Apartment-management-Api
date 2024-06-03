@@ -9,7 +9,7 @@ class UseRoles extends Model
 {
     use HasFactory;
 
-    protected $table = 'useroles';
+    protected $table = 'user_roles';
 
     /**
      * The attributes that are mass assignable.
