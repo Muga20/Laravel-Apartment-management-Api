@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UseRoles extends Model
+class UserRoles extends Model
 {
     use HasFactory;
 
@@ -28,7 +28,6 @@ class UseRoles extends Model
     {
         return $this->belongsTo(User::class);
     }
-
 
     /**
      * Get the role associated with the user.

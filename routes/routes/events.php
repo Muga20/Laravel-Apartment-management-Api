@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\EventsController;
+use App\Http\Controllers\Notification\EventsController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['token' ]], function () {

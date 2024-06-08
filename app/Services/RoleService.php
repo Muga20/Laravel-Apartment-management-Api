@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\UseRoles;
+use App\Models\UserRoles;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 
@@ -15,7 +15,7 @@ class RoleService
             $defaultRole = DB::table('roles')->where('name', $defaultRoleName)->first();
 
             if ($defaultRole) {
-                $userRole = new UseRoles();
+                $userRole = new UserRoles();
                 $userRole->user_id = $user->id;
                 $userRole->role_id = $defaultRole->id;
                 $userRole->save();

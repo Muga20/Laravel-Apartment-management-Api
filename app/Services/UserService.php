@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Jobs\GenerateAvatar;
 use App\Models\Units;
 use App\Models\User;
+use App\Models\Channel;
 use App\Models\UserDetails;
+use App\Traits\HandlesNotificationCreation;
 use App\Traits\ImageTrait;
 use App\Traits\RoleRequirements;
 use Illuminate\Http\Request;
@@ -15,6 +17,7 @@ class UserService
 {
     use RoleRequirements;
     use ImageTrait;
+    use HandlesNotificationCreation;
 
     private function getRequiredRoles($tier)
     {
@@ -39,11 +42,13 @@ class UserService
             }
 
             $company = $data['company'];
-            $user = $data['user'];
+            $authUser = $data['user'];
+            $userRoles = $data['userRoles'];
+
 
             $userCount = $company->users()->count();
 
-            if ($userCount >= 80) {
+            if ($userCount >= 300) {
                 return response()->json(['error' => 'Maximum number of users reached for this company'], 403);
             }
 
@@ -87,6 +92,10 @@ class UserService
             }
 
             RoleService::assignDefaultRole($user, 'user');
+
+
+
+            $this->createNotification($user, $authUser, $userRoles);
 
             return $user;
 
@@ -207,9 +216,7 @@ class UserService
 
             $userDetails->save();
 
-
             GenerateAvatar::dispatch($userDetails)->onQueue('avatars');
-
 
             try {
                 $unit = Units::where('unit_name', $unit)->firstOrFail();
@@ -231,7 +238,6 @@ class UserService
             return response()->json(['error' => 'Failed to create tenant'], 500);
         }
     }
-
 
 
 }

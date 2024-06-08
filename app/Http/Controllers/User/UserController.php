@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Mail\NewAccount;
+use App\Models\ChannelUsers;
 use App\Models\Company;
 use App\Models\NewUserSession;
 use App\Models\Roles;
@@ -50,11 +51,25 @@ class UserController extends Controller
             $user = $data['user'];
             $userRoles = $data['userRoles'];
 
-            return response()->json(['user' => $user, 'roles' => $userRoles], 200);
-        } catch (\Exception $e) {
+            // Eager load the 'channel' relationship to fetch channels directly
+            $userChannels = ChannelUsers::with('channel')->where('user_id', $user->id)->get();
 
+            $channels = $userChannels->map(function ($channelUser) {
+                return [
+                    'channel_id' => $channelUser->channel->id,
+                    'channel_name' => $channelUser->channel->channel_name,
+                    'event' => $channelUser->channel->event,
+                ];
+            });
+
+            return response()->json([
+                'user' => $user,
+                'roles' => $userRoles,
+                'channels' => $channels,
+            ], 200);
+        } catch (\Exception $e) {
             // Return a JSON response with the error message and a 500 status code
-            return response()->json(['error' => 'Failed to your profile: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to fetch user profile: ' . $e->getMessage()], 500);
         }
     }
 
@@ -75,12 +90,11 @@ class UserController extends Controller
 
                 $user = User::where('email', $compressedEmail)->first();
 
-                $user->update(['' => null,]);
-
+                $user->update(['' => null]);
 
                 $company = Company::findOrFail($request->input('company_id'));
 
-                $this->sendNewAccountEmail($user, $company);
+                //$this->sendNewAccountEmail($user, $company);
 
                 return response()->json(['success' => 'User Created Successfully'], 200);
             } catch (ModelNotFoundException $e) {
@@ -96,8 +110,6 @@ class UserController extends Controller
         //$authToken = sha1($user->id);
 
         $authLink = str_replace('.', '_', base64_encode($user->id . '|' . now()->timestamp . '|' . Str::random(40)));
-
-
 
         NewUserSession::create([
             'email' => $user->email,
