@@ -22,7 +22,11 @@ return new class extends Migration
             $table->string('acc_number')->nullable();
             $table->date('transaction_date');
             $table->string('receipt');
-            $table->text('receiptInput')->nullable();
+
+            $table->string('transaction_id');
+            $table->string('payingFor');
+            $table->string('recommendation');
+            $table->text('receiptInput');
 
             $table->string('status');
             $table->string('isApproved')->nullable();

@@ -26,9 +26,14 @@ return new class extends Migration
             $table->string('paymentNumber')->nullable();
             $table->text('damages')->nullable();
 
+            $table->string('currentMeterReading')->nullable();
+            $table->string('previousMeterReading')->nullable();
+            $table->date('dateOfOccupation')->nullable();
+
             $table->unsignedBigInteger('agent_id')->nullable();
             $table->unsignedBigInteger('tenant_id')->nullable();
             $table->unsignedBigInteger('home_id');
+
 
             $table->string('status');
             $table->string('isPaid')->nullable();

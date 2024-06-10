@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\CompressionService;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -26,33 +25,6 @@ class User extends Authenticatable implements JWTSubject
         , 'two_factor_expires_at', 'sms_number', 'two_fa_status',
     ];
 
-    public static function boot()
-    {
-        parent::boot();
-
-        static::retrieved(function ($user) {
-            $compressionService = app(CompressionService::class);
-            $compressionService->decompressModelAttributes($user);
-        });
-    }
-
-    protected function compressAttribute($key, $value, $compress = true)
-    {
-        if ($compress && in_array($key, [
-            'username', 'email',
-            'address', 'phone', 'description',
-            'location',
-        ])) {
-            return gzcompress($value);
-        }
-
-        return $value;
-    }
-
-    public function setAttribute($key, $value)
-    {
-        parent::setAttribute($key, $this->compressAttribute($key, $value));
-    }
 
     public function getJWTIdentifier()
     {

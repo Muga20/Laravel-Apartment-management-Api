@@ -8,6 +8,7 @@ use App\Models\Channel;
 use App\Models\ChannelUsers;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Queue;
 
 class NotificationController extends Controller
 {
@@ -51,7 +52,7 @@ class NotificationController extends Controller
     {
         try {
             // Dispatch the job to delete the notification
-            DeleteNotificationJob::dispatch($id);
+            Queue::push(new DeleteNotificationJob($id));
 
             return response()->json(['message' => 'Notification delete request queued successfully'], 200);
         } catch (\Exception $e) {

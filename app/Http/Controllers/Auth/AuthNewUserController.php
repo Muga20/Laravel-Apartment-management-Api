@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\CompressionService;
 use App\Traits\AuthTrait;
 use Illuminate\Http\Request;
 use App\Models\NewUserSession;
@@ -19,10 +18,7 @@ class AuthNewUserController extends Controller
     {
         $email = $request->input('email');
 
-        $compressionService = new CompressionService();
-        $compressedEmail = $compressionService->compressAttribute($email);
-
-        $user = User::where('email', $compressedEmail)->first();
+        $user = User::where('email', $email)->first();
 
         if (!$user) {
             return $this->handleAuthenticationFailure('User not found.');

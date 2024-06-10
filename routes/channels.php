@@ -10,3 +10,4 @@ Broadcast::channel('notifications', function (User $user) {
     // to join the channel, such as checking user roles or permissions.
     return true; // Allow all authenticated users to join the notifications channel
 });
+

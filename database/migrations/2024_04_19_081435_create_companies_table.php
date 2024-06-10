@@ -15,17 +15,17 @@ return new class extends Migration {
 
             $table->id();
             $table->string('companyId');
-            $table->binary('name');
-            $table->binary('email')->nullable();
+            $table->string('name');
+            $table->string('email')->nullable();
             $table->string('status');
-            $table->binary('address')->nullable();
-            $table->binary('phone')->nullable();
-            $table->binary('description')->nullable();
+            $table->string('address')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('description')->nullable();
             $table->string('theme')->nullable();
-            $table->binary('logoImage')->nullable();
-            $table->binary('slug');
-            $table->binary('location')->nullable();
-            $table->binary('companyUrl')->nullable();
+            $table->string('logoImage')->nullable();
+            $table->string('slug');
+            $table->string('location')->nullable();
+            $table->string('companyUrl')->nullable();
             $table->timestamps();
 
         });

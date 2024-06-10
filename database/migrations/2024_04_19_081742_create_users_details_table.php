@@ -19,18 +19,18 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('middle_name')->nullable();
             $table->string('last_name');
-            $table->binary('username')->nullable();
+            $table->string('username')->nullable();
 
-            $table->binary('phone')->nullable();
-            $table->binary('gender')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('gender')->nullable();
             $table->date('date_of_birth')->nullable();
-            $table->binary('country')->nullable();
-            $table->binary('id_number')->nullable();
+            $table->string('country')->nullable();
+            $table->string('id_number')->nullable();
 
-            $table->binary('address')->nullable();
+            $table->string('address')->nullable();
             $table->text('profileImage')->nullable();
-            $table->binary('location')->nullable();
-            $table->binary('about_the_user')->nullable();
+            $table->string('location')->nullable();
+            $table->string('about_the_user')->nullable();
 
             $table->string('is_verified');
 

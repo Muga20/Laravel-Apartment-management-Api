@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\OTPemail;
 use App\Models\User;
-use App\Services\CompressionService;
 use App\Services\TwoFactorService;
 use App\Traits\AuthTrait;
 use Carbon\Carbon;
@@ -28,10 +27,7 @@ class LoginController extends Controller
     {
         $email = $request->input('email');
 
-        $compressionService = new CompressionService();
-        $compressedEmail = $compressionService->compressAttribute($email);
-
-        $user = User::where('email', $compressedEmail)->orWhere('sms_number', $compressedEmail)->first();
+        $user = User::where('email', $email)->orWhere('sms_number', $email)->first();
 
         if (!$user) {
             return response()->json(['error' => 'Email not found. Please contact admin.'], 404);
@@ -58,10 +54,8 @@ class LoginController extends Controller
             return response()->json(['error' => 'Failed to send OTP. Please try again.'], 500);
         }
 
-        $compressionService = new CompressionService();
-        $compressedEmail = $compressionService->compressAttribute($email);
 
-        $user = User::where('email', $compressedEmail)->first();
+        $user = User::where('email', $email)->first();
 
         if ($user) {
             $encodedOTP = base64_encode($otp);
@@ -82,10 +76,8 @@ class LoginController extends Controller
         ]);
 
         $credentials = $request->only('email', 'otp');
-        $compressionService = new CompressionService();
-        $compressedEmail = $compressionService->compressAttribute($credentials['email']);
 
-        $user = User::where('email', $compressedEmail)->first();
+        $user = User::where('email', $credentials['email'])->first();
 
         if (!$user) {
             return response()->json(['error' => 'Unauthorized - Invalid credentials'], 401);
@@ -114,10 +106,7 @@ class LoginController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        $compressionService = new CompressionService();
-        $compressedEmail = $compressionService->compressAttribute($credentials['email']);
-
-        $user = User::where('email', $compressedEmail)->orWhere('sms_number', $credentials['email'])->first();
+        $user = User::where('email', $credentials['email'])->orWhere('sms_number', $credentials['email'])->first();
 
         if (!$user) {
             return response()->json(['error' => 'Unauthorized - Invalid credentials'], 401);

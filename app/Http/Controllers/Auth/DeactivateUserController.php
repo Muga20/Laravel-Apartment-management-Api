@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Controller;
 use App\Mail\ActivateAcc;
-use App\Services\CompressionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
 
 class DeactivateUserController extends Controller
 {
@@ -18,10 +18,24 @@ class DeactivateUserController extends Controller
         DB::beginTransaction();
 
         try {
-            // Assuming you have a method to load common data including user
-            $data = $this->loadCommonData($request);
-            $userInstance = $data['user'];
-            $userInstance->update([
+            // Validate the incoming request
+            $request->validate([
+                'password' => 'required|string', // Add password validation rule
+            ]);
+
+            // Retrieve the authenticated user
+            $user = $request->user();
+
+            // Check if the provided password matches the user's password
+            if (!Hash::check($request->input('password'), $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Incorrect password.',
+                ], 400);
+            }
+
+            // Update user status to deactivated
+            $user->update([
                 'authType' => 'token',
                 'status' => 'deactivated',
                 'updated_at' => now(),
@@ -29,14 +43,13 @@ class DeactivateUserController extends Controller
 
             DB::commit();
 
-            // Assuming you have a method to handle logout logic
+            // Log out the user
             $loginController = app(LoginController::class);
             $response = $loginController->logout($request);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Account deactivated successfully.',
-                'data' => $response
             ], 200);
 
         } catch (\Exception $e) {
@@ -53,10 +66,7 @@ class DeactivateUserController extends Controller
     public function sendToken(Request $request)
     {
         try {
-            $compressionService = new CompressionService();
-            $compressedEmail = $compressionService->compressAttribute($request->input('email'));
-
-            $user = User::where('email', $compressedEmail)->first();
+            $user = User::where('email', $request->input('email'))->first();
 
             if (!$user) {
                 return response()->json([
@@ -80,6 +90,4 @@ class DeactivateUserController extends Controller
             ], 500);
         }
     }
-
-
 }

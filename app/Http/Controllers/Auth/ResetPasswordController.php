@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Mail\ForgotPassword;
 use App\Models\PasswordResetToken;
 use App\Models\User;
-use App\Services\CompressionService;
 use App\Traits\AuthTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -114,10 +113,7 @@ class ResetPasswordController extends Controller
         try {
             $data = $request->all();
 
-            $compressionService = new CompressionService();
-            $compressedEmail = $compressionService->compressAttribute($data['email']);
-
-            $user = User::where('email', $compressedEmail)->first();
+            $user = User::where('email', $data['email'])->first();
 
             if (!$user) {
                 return response()->json(['error' => 'User not found.'], 404);
@@ -177,10 +173,8 @@ class ResetPasswordController extends Controller
                     return response()->json(['error' => 'Invalid or expired token.'], 400);
                 }
 
-                $compressionService = new CompressionService();
-                $compressedEmail = $compressionService->compressAttribute($tokenData->email);
-
-                $user = User::where('email', $compressedEmail)->first();
+             
+                $user = User::where('email', $tokenData->email)->first();
 
                 if (!$user) {
                     return response()->json(['error' => 'User not found.'], 404);

@@ -9,15 +9,12 @@ use App\Http\Controllers\Auth\DeactivateUserController;
 use App\Http\Controllers\DashboardController;
 
 
-
-
-
 Route::group(['middleware' => ['token']], function () {
 
     Route::prefix('/member')->group(function () {
 
         Route::post('/create-member', [UserController::class, 'storeNewUser'])->name('storeNewUser');
-        Route::get('/editUser', [UserController::class, 'editUser'])->name('editUser');
+        Route::post('/update-profile-image', [UserController::class, 'updateProfileImage']);
 
         Route::get('/userSettings', [UserController::class, 'userSettings'])->name('userSettings');
         Route::get('/userSecurity', [UserController::class, 'userSecurity'])->name('userSecurity');
@@ -37,13 +34,14 @@ Route::group(['middleware' => ['token']], function () {
 
         Route::post('/set-auth-type',[UserController::class, 'setAuthType'])->name('setAuthType');
 
-        Route::post('/deactivate-account', [DeactivateUserController::class, 'deactivateMyAccount'])->name('deactivateMyAccount');
+        Route::post('/deactivate-account', [DeactivateUserController::class, 'deactivateMyAccount']);
 
     });
 
     Route::get('/auth/{provider}/redirect/{userId}',[SocialiteController::class, 'userAuth'] )->name('userAuth');
 
 });
+
 
 
 

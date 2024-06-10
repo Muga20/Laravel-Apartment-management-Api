@@ -63,7 +63,6 @@ trait HandlesNotificationCreation
             }
         }
 
-        // Dispatch the event
         event(new NotificationEvent($notification));
     }
 

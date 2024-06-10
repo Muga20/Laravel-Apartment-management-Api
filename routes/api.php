@@ -3,7 +3,7 @@
 use App\Http\Controllers\SocketsController;
 use Illuminate\Support\Facades\Route;
 
-Route::post("/sockets/connect", [SocketsController::class, "connect"]);
+//Route::post("/sockets/connect", [SocketsController::class, "connect"]);
 
 require __DIR__ . '/routes/company.php';
 require __DIR__ . '/routes/plans.php';
