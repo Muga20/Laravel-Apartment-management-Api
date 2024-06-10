@@ -91,6 +91,7 @@ class UserService
                 Queue::push(new GenerateAvatar($userDetails));
             }
 
+
             RoleService::assignDefaultRole($user, 'user');
 
             $this->createNotification($user, $authUser, $userRoles);
