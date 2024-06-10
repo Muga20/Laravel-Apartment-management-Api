@@ -2,7 +2,6 @@
 
 namespace App\Http;
 
-
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -41,12 +40,13 @@ class Kernel extends HttpKernel
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
 
         ],
     ];
 
+   
     /**
      * The application's middleware aliases.
      *
@@ -69,7 +69,5 @@ class Kernel extends HttpKernel
         'token' => \App\Http\Middleware\JwtToken::class,
         'request.limit' => \App\Http\Middleware\RequestLimitMiddleware::class,
     ];
-
-
 
 }

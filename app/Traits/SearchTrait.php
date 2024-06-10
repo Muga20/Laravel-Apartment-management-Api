@@ -5,7 +5,6 @@
 namespace App\Traits;
 
 use App\Models\Roles;
-use App\Services\CompressionService;
 use Illuminate\Http\Request;
 
 trait SearchTrait
@@ -28,12 +27,10 @@ trait SearchTrait
             $query = $selectedRole->users()->with('detail')->with('company')->with('roles');
 
             if ($keyword) {
-                $compressionService = new CompressionService();
-                $compressedKeyword = $compressionService->compressAttribute($keyword);
-
+             
                 $query->whereHas('detail', function ($q) use ($keyword) {
                     $q->whereRaw("CONCAT(first_name, ' ', middle_name, ' ', last_name) LIKE ?", ["%{$keyword}%"]);
-                })->orWhere('email', 'like', "%{$compressedKeyword}%");
+                })->orWhere('email', 'like', "%{$keyword}%");
             }
 
             if ($status) {

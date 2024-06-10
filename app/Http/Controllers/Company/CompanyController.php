@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Company;
 
+use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\User;
 use App\Services\UserService;
@@ -13,7 +14,6 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use App\Models\NewUserSession;
 use App\Mail\NewAccount;
-use App\Services\CompressionService;
 
 class CompanyController extends Controller
 {
@@ -80,7 +80,6 @@ class CompanyController extends Controller
 
             $image = $request->file('logoImage');
             $uploadedImageUrl = Cloudinary::upload($image->getRealPath())->getSecurePath();
-
             $company->logoImage = $uploadedImageUrl;
 
             $company->save();
@@ -120,10 +119,9 @@ class CompanyController extends Controller
                     'company_id' => 'required|exists:companies,id',
                 ]);
 
-                $compressionService = new CompressionService();
-                $compressedEmail = $compressionService->compressAttribute($request->input('email'));
+                $email = $request->input('email');
 
-                $user = User::where('email', $compressedEmail)->first();
+                $user = User::where('email', $email)->first();
 
                 $user->update(['' => null]);
 

@@ -3,18 +3,22 @@
 namespace App\Services;
 
 use App\Jobs\GenerateAvatar;
+use App\Jobs\UploadImage;
 use App\Models\Units;
 use App\Models\User;
 use App\Models\UserDetails;
+use App\Traits\HandlesNotificationCreation;
 use App\Traits\ImageTrait;
 use App\Traits\RoleRequirements;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 
 class UserService
 {
     use RoleRequirements;
     use ImageTrait;
+    use HandlesNotificationCreation;
 
     private function getRequiredRoles($tier)
     {
@@ -39,11 +43,12 @@ class UserService
             }
 
             $company = $data['company'];
-            $user = $data['user'];
+            $authUser = $data['user'];
+            $userRoles = $data['userRoles'];
 
             $userCount = $company->users()->count();
 
-            if ($userCount >= 80) {
+            if ($userCount >= 300) {
                 return response()->json(['error' => 'Maximum number of users reached for this company'], 403);
             }
 
@@ -83,10 +88,12 @@ class UserService
             ]);
 
             if (!$userDetails->profileImage) {
-                GenerateAvatar::dispatch($userDetails);
+                Queue::push(new GenerateAvatar($userDetails));
             }
 
             RoleService::assignDefaultRole($user, 'user');
+
+            $this->createNotification($user, $authUser, $userRoles);
 
             return $user;
 
@@ -108,41 +115,67 @@ class UserService
 
     public function updateUser(Request $request, $data)
     {
-
         try {
-
-            $userData = $request->only([
-                'first_name', 'middle_name', 'last_name', 'date_of_birth', 'id_number',
-                'username', 'address', 'phone', 'gender', 'location', 'about_the_user',
+            // Validate request data
+            $validatedData = $request->validate([
+                'first_name' => 'nullable|string|max:255',
+                'middle_name' => 'nullable|string|max:255',
+                'last_name' => 'nullable|string|max:255',
+                'date_of_birth' => 'nullable|date',
+                'id_number' => 'nullable|string|max:255',
+                'username' => 'nullable|string|max:255',
+                'address' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:15',
+                'gender' => 'nullable|string|in:male,female,other',
+                'location' => 'nullable|string|max:255',
+                'about_the_user' => 'nullable|string',
+                //'profileImage' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
 
-            $this->updateImage($request, $userData, 'profileImage');
-
+            // Get user and company information from data
             $company_id = $data['company']->id;
             $user = $data['user'];
 
-            $userData['company_id'] = $company_id;
-            $userData['status'] = $user->status;
+            // Prepare user data for updating
+            $userData = array_merge($validatedData, [
+                'company_id' => $company_id,
+                'status' => $user->status,
+            ]);
 
+            // Check for existing user details
             $userDetails = UserDetails::where('user_id', $user->id)->firstOrFail();
 
+            // Check if ID number already exists for a different user
             $existingIdNumberTenant = UserDetails::where('id_number', $request->input('id_number'))->first();
             if ($existingIdNumberTenant && $existingIdNumberTenant->user_id != $user->id) {
                 return response()->json(['error' => 'ID number already exists'], 400);
             }
 
-            $dob = new \DateTime($request->input('date_of_birth'));
-            $today = new \DateTime();
-            $age = $dob->diff($today)->y;
+            // Convert date format for date of birth
+            if ($request->has('date_of_birth')) {
+                $dateOfBirth = date('Y-m-d', strtotime($request->input('date_of_birth')));
+                $userData['date_of_birth'] = $dateOfBirth;
 
-            if ($age < 18) {
-                return response()->json(['error' => 'User must be 18 years or older'], 400);
+                // Calculate user's age and validate
+                $dob = new \DateTime($dateOfBirth);
+                $today = new \DateTime();
+                $age = $dob->diff($today)->y;
+
+                if ($age < 18) {
+                    return response()->json(['error' => 'User must be 18 years or older'], 400);
+                }
             }
 
+            // Update user details without the profile image
+            unset($userData['profile_image']);
             $userDetails->update($userData);
 
             return response()->json(['success' => 'User details updated successfully.'], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['error' => $e->errors()], 422);
         } catch (\Exception $e) {
+            // Handle other exceptions
             return response()->json(['error' => 'Failed to update user: ' . $e->getMessage()], 500);
         }
     }
@@ -207,9 +240,7 @@ class UserService
 
             $userDetails->save();
 
-
             GenerateAvatar::dispatch($userDetails)->onQueue('avatars');
-
 
             try {
                 $unit = Units::where('unit_name', $unit)->firstOrFail();
@@ -231,7 +262,5 @@ class UserService
             return response()->json(['error' => 'Failed to create tenant'], 500);
         }
     }
-
-
 
 }

@@ -61,7 +61,7 @@ class PlanController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['error' => $e->validator->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create plan. Please try again.'], 500);
+            return response()->json(['error' => 'Failed to create plan. Please try again.'. $e->getMessage()], 500);
         }
     }
 

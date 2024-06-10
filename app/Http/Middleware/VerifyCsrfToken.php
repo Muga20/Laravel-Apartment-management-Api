@@ -13,5 +13,7 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'api/*',
+        'websockets-monitor/auth',
+        'websockets-monitor/event',
     ];
 }

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\Company\CompanyController;
 use App\Http\Controllers\Finance\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 

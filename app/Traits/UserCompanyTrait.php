@@ -11,7 +11,7 @@ trait UserCompanyTrait
         $payload = $request->attributes->get('jwt_payload');
         $userId = $payload->id;
 
-        $user = User::with(['company', 'detail'])->find($userId);
+        $user = User::with(['company', 'detail', 'channelUsers'])->find($userId);
 
         if (!$user || !$user->company || !$user->detail) {
             return response()->json(['error' => 'User or company not found'], 404);

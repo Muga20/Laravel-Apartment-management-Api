@@ -14,12 +14,12 @@ return new class extends Migration {
             $table->id();
             $table->string('plan_name');
             $table->string('duration');
-            $table->text('description');
-            $table->string('number_of_companies');
+            $table->text('description')->nullable();
+            $table->string('number_of_homes');
             $table->string('number_of_agents');
-
             $table->string('slug');
             $table->decimal('price', 10, 2)->nullable(false);
+            $table->string('status');
             $table->timestamps();
         });
     }

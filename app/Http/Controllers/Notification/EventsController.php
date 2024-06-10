@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Notification;
 
 use App\Models\Event;
+use App\Traits\ImageTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Traits\ImageTrait;
 
 class EventsController extends Controller
 {
@@ -17,7 +17,6 @@ class EventsController extends Controller
 
         return view('pages.Events.show', $data);
     }
-
 
     public function createEvents(Request $request)
     {
@@ -36,7 +35,7 @@ class EventsController extends Controller
             'location' => 'required|string',
             'date' => 'required|date',
             'startTime' => 'required|string',
-            'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         try {
@@ -54,30 +53,28 @@ class EventsController extends Controller
                 'location' => $request->input('location'),
                 'date' => $request->input('date'),
                 'startTime' => $request->input('startTime'),
-                'company_id' => $company->id
+                'company_id' => $company->id,
             ];
 
             $this->updateImage($request, $eventData, 'image');
 
             Event::create($eventData);
 
-             return redirect()->back()->with('success', 'Event details created successfully.');
-         } catch (\Exception $e) {
-             return back()->with('error', 'Failed to create Event: ' . $e->getMessage());
-         }
+            return redirect()->back()->with('success', 'Event details created successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to create Event: ' . $e->getMessage());
+        }
     }
 
-    public function editEvents(Request $request , $dummy, $event = null)
+    public function editEvents(Request $request, $dummy, $event = null)
     {
         $data = $this->loadCommonData($request);
         $decodedEventId = unserialize(base64_decode($event));
 
         $editEvent = Event::findOrFail($decodedEventId);
 
-
         return view('pages.Events.edit', compact('editEvent') + $data);
     }
-
 
     public function updateEvents(Request $request, $dummy, $event)
     {
@@ -105,7 +102,7 @@ class EventsController extends Controller
                 'location' => $request->input('location'),
                 'date' => $request->input('date'),
                 'startTime' => $request->input('startTime'),
-                'company_id' => $company->id
+                'company_id' => $company->id,
             ];
 
             $updateEvent->update($eventData);
@@ -116,9 +113,7 @@ class EventsController extends Controller
         }
     }
 
-
-
-    public function deleteEvents($dummy , Event $event)
+    public function deleteEvents($dummy, Event $event)
     {
         try {
             $event->delete();
@@ -127,6 +122,5 @@ class EventsController extends Controller
             return redirect()->back()->with('error', 'Failed to delete event: ' . $e->getMessage());
         }
     }
-
 
 }

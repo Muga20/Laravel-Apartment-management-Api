@@ -19,7 +19,8 @@ Route::group(['middleware' => ['token']], function () {
         Route::get('/{role}', [RoleController::class, 'getUsersByRoleAndSearch']);
 
         Route::get('/edit-role/{role}' ,[RoleController::class, 'editRole'])->name('editRole');
-        Route::put('update-role/{role}' ,[RoleController::class, 'updateRole'])->name('updateRole');
+        Route::put('/update-role/{role}' ,[RoleController::class, 'updateRole']);
+        Route::put('/toggleRoles/{role}' , [RoleController::class ,'deactivateOrActivateRole']);
 
 
         Route::put('/deactivate_user/{deactivate}', [RoleController::class, 'deactivateUser']);

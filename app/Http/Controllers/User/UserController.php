@@ -4,12 +4,14 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Mail\NewAccount;
+use App\Models\ChannelUsers;
 use App\Models\Company;
 use App\Models\NewUserSession;
 use App\Models\Roles;
 use App\Models\User;
-use App\Services\CompressionService;
+use App\Models\UserDetails;
 use App\Services\UserService;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -50,11 +52,25 @@ class UserController extends Controller
             $user = $data['user'];
             $userRoles = $data['userRoles'];
 
-            return response()->json(['user' => $user, 'roles' => $userRoles], 200);
-        } catch (\Exception $e) {
+            // Eager load the 'channel' relationship to fetch channels directly
+            $userChannels = ChannelUsers::with('channel')->where('user_id', $user->id)->get();
 
+            $channels = $userChannels->map(function ($channelUser) {
+                return [
+                    'channel_id' => $channelUser->channel->id,
+                    'channel_name' => $channelUser->channel->channel_name,
+                    'event' => $channelUser->channel->event,
+                ];
+            });
+
+            return response()->json([
+                'user' => $user,
+                'roles' => $userRoles,
+                'channels' => $channels,
+            ], 200);
+        } catch (\Exception $e) {
             // Return a JSON response with the error message and a 500 status code
-            return response()->json(['error' => 'Failed to your profile: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to fetch user profile: ' . $e->getMessage()], 500);
         }
     }
 
@@ -70,17 +86,13 @@ class UserController extends Controller
                     'company_id' => 'required|exists:companies,id',
                 ]);
 
-                $compressionService = new CompressionService();
-                $compressedEmail = $compressionService->compressAttribute($request->input('email'));
+                $user = User::where('email', $request->input('email'))->first();
 
-                $user = User::where('email', $compressedEmail)->first();
-
-                $user->update(['' => null,]);
-
+                $user->update(['' => null]);
 
                 $company = Company::findOrFail($request->input('company_id'));
 
-                $this->sendNewAccountEmail($user, $company);
+                //$this->sendNewAccountEmail($user, $company);
 
                 return response()->json(['success' => 'User Created Successfully'], 200);
             } catch (ModelNotFoundException $e) {
@@ -96,8 +108,6 @@ class UserController extends Controller
         //$authToken = sha1($user->id);
 
         $authLink = str_replace('.', '_', base64_encode($user->id . '|' . now()->timestamp . '|' . Str::random(40)));
-
-
 
         NewUserSession::create([
             'email' => $user->email,
@@ -117,6 +127,41 @@ class UserController extends Controller
 
         return $this->userService->updateUser($request, $data);
     }
+
+    public function updateProfileImage(Request $request)
+    {
+        try {
+            // Validate the incoming request
+            $request->validate([
+                'profileImage' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            ]);
+
+            // Get the authenticated user
+            $user = auth()->user();
+
+            // Find the user details
+            $userDetails = UserDetails::where('user_id', $user->id)->firstOrFail();
+
+            // Handle profile image upload
+            if ($request->hasFile('profileImage')) {
+                $image = $request->file('profileImage');
+                $uploadedImageUrl = Cloudinary::upload($image->getRealPath())->getSecurePath();
+                // Assuming $company is the instance where you want to store the image URL
+                $userDetails->profileImage = $uploadedImageUrl;
+                $userDetails->save();
+            }
+
+            // Return a success response
+            return response()->json(['message' => 'Profile image updated successfully.'], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['error' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            // Handle other exceptions
+            return response()->json(['error' => 'Failed to update user: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function setAuthType(Request $request)
     {
         try {

@@ -2,10 +2,8 @@
 
 namespace App\Models;
 
-use App\Services\CompressionService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
 
 class Company extends Model
 {
@@ -15,7 +13,7 @@ class Company extends Model
         'name', 'email', 'status', 'address',
         'phone', 'description', 'theme',
         'logoImage', 'slug', 'location',
-        'companyUrl','companyId'
+        'companyUrl', 'companyId',
     ];
 
     public function plan()
@@ -44,8 +42,8 @@ class Company extends Model
     }
 
 
-    public function tenants()
+    public function channelUsers()
     {
-        return $this->hasMany(Tenants::class);
+        return $this->hasMany(ChannelUsers::class);
     }
 }

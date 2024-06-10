@@ -5,7 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Roles;
 use App\Models\User;
-use App\Models\UseRoles;
+use App\Models\UserRoles;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -48,7 +48,6 @@ class RoleController extends Controller
             $role->status = 'inactive';
             $role->slug = Str::slug($validatedData['name'], '-');
             $role->save();
-            
 
             return response()->json(['success' => 'Role created successfully'], 201);
 
@@ -69,10 +68,10 @@ class RoleController extends Controller
         return view('pages.Roles.edit', compact('roleName') + $data);
     }
 
-    public function updateRole(Request $request, $dummy, $role)
+    public function updateRole(Request $request, $role)
     {
         try {
-            $decodedRoleId = unserialize(base64_decode($role));
+
             $roleName = Roles::findOrFail($decodedRoleId);
 
             $validatedData = $request->validate([
@@ -80,6 +79,7 @@ class RoleController extends Controller
             ]);
 
             $roleName->name = $validatedData['name'];
+
             $roleName->save();
 
             return redirect()->back()->with('success', 'Role Updated Successfully');
@@ -112,6 +112,29 @@ class RoleController extends Controller
         }
     }
 
+    public function deactivateOrActivateRole(Request $request, $role = null)
+    {
+        try {
+            $role = Roles::findOrFail($role);
+
+            if (!$role) {
+                return response()->json(['error' => 'Role not found.'], 404);
+            }
+
+            $newStatus = $role->status === 'active' ? 'inactive' : 'active';
+
+            $role->update([
+                'status' => $newStatus,
+            ]);
+
+            $successMessage = $newStatus === 'inactive' ? 'Role deactivated successfully.' : 'Role activated successfully.';
+
+            return response()->json(['message' => $successMessage], 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Failed to deactivate/activate role. Please try again.'], 500);
+        }
+    }
+
     public function assignRoleToUser(Request $request, $id)
     {
         try {
@@ -123,12 +146,12 @@ class RoleController extends Controller
 
             $role = Roles::findOrFail($validatedData['role_id']);
 
-            $existingUserRole = UseRoles::where('user_id', $user->id)
+            $existingUserRole = UserRoles::where('user_id', $user->id)
                 ->where('role_id', $role->id)
                 ->first();
 
             if (!$existingUserRole) {
-                $userRole = new UseRoles();
+                $userRole = new UserRoles();
                 $userRole->user_id = $user->id;
                 $userRole->role_id = $role->id;
                 $userRole->save();
@@ -145,9 +168,10 @@ class RoleController extends Controller
     public function deleteRoleFromUser($user, $role)
     {
         try {
+
             $user = User::findOrFail($user);
 
-            $roleAssociation = UseRoles::where('user_id', $user->id)
+            $roleAssociation = UserRoles::where('user_id', $user->id)
                 ->where('role_id', $role)
                 ->firstOrFail();
 

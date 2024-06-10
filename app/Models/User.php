@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Models;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-use App\Services\CompressionService;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -21,39 +20,10 @@ class User extends Authenticatable implements JWTSubject
 
     protected $fillable = [
         'email', 'password', 'status', 'company_id',
-        'role_id' , 'otp','authType','uuid','provider',
-        'provider_id' ,'provider_token','two_factor_code'
-        ,'two_factor_expires_at','sms_number','two_fa_status'
+        'role_id', 'otp', 'authType', 'uuid', 'provider',
+        'provider_id', 'provider_token', 'two_factor_code'
+        , 'two_factor_expires_at', 'sms_number', 'two_fa_status',
     ];
-
-
-    public static function boot()
-    {
-        parent::boot();
-
-        static::retrieved(function ($user) {
-            $compressionService = app(CompressionService::class);
-            $compressionService->decompressModelAttributes($user);
-        });
-    }
-
-
-    protected function compressAttribute($key, $value, $compress = true)
-    {
-        if ($compress && in_array($key, [
-            'username', 'email',
-        'address', 'phone', 'description',
-        'location'
-    ]))
-            return gzcompress($value);
-        return $value;
-    }
-
-    public function setAttribute($key, $value)
-    {
-        parent::setAttribute($key, $this->compressAttribute($key, $value));
-    }
-
 
 
     public function getJWTIdentifier()
@@ -71,7 +41,6 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Company::class);
     }
 
-
     public function roles()
     {
         return $this->belongsToMany(Roles::class, 'user_roles', 'user_id', 'role_id');
@@ -88,7 +57,6 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasOne(UserDetails::class);
     }
-
 
     public function agentUnits()
     {
@@ -110,6 +78,9 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(unitRecords::class, 'tenant_id');
     }
 
-
+    public function channelUsers()
+    {
+        return $this->hasMany(ChannelUsers::class)->with('channel');
+    }
 
 }
