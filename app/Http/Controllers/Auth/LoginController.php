@@ -16,8 +16,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Token;
-use Tymon\JWTAuth\Exceptions\TokenExpiredException;
-
 
 class LoginController extends Controller
 {
@@ -30,7 +28,7 @@ class LoginController extends Controller
         $user = User::where('email', $email)->orWhere('sms_number', $email)->first();
 
         if (!$user) {
-            return response()->json(['error' => 'Email not found. Please contact admin.'], 404);
+            return response()->json(['success' => false, 'message' => 'Email not found. Please contact admin.'], 404);
         }
 
         $authType = $user->authType;
@@ -51,9 +49,8 @@ class LoginController extends Controller
         try {
             Mail::to($email)->send(new OTPemail($otp));
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to send OTP. Please try again.'], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to send OTP. Please try again.'], 500);
         }
-
 
         $user = User::where('email', $email)->first();
 
@@ -62,9 +59,9 @@ class LoginController extends Controller
             $user->otp = $encodedOTP;
             $user->save();
 
-            return response()->json(['message' => 'OTP sent successfully.'], 200);
+            return response()->json(['success' => true, 'message' => 'OTP sent successfully.'], 200);
         } else {
-            return response()->json(['error' => 'User not found.'], 404);
+            return response()->json(['success' => false, 'message' => 'User not found.'], 404);
         }
     }
 
@@ -80,17 +77,17 @@ class LoginController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         if (!$user) {
-            return response()->json(['error' => 'Unauthorized - Invalid credentials'], 401);
+            return response()->json(['success' => false, 'message' => 'Unauthorized - Invalid credentials'], 401);
         }
 
         if ($user->authType !== 'otp' && !empty($user->authType)) {
-            return response()->json(['error' => 'Unauthorized - Invalid authentication type. Please reach out to the admin.'], 401);
+            return response()->json(['success' => false, 'message' => 'Unauthorized - Invalid authentication type. Please reach out to the admin.'], 401);
         }
 
         $decodedOTP = base64_decode($user->otp);
 
         if ($decodedOTP !== $credentials['otp']) {
-            return response()->json(['error' => 'Unauthorized - Invalid OTP'], 401);
+            return response()->json(['success' => false, 'message' => 'Unauthorized - Invalid OTP'], 401);
         }
 
         $user->otp = null;
@@ -99,7 +96,7 @@ class LoginController extends Controller
         // return $this->handleAuthentication($user, $request);
 
         // Implement the logic for successful authentication (e.g., generating a token, etc.)
-        return response()->json(['message' => 'Authentication successful', 'user' => $user], 200);
+        return response()->json(['success' => true, 'message' => 'Authentication successful', 'user' => $user], 200);
     }
 
     public function logInUser(Request $request)
@@ -109,15 +106,15 @@ class LoginController extends Controller
         $user = User::where('email', $credentials['email'])->orWhere('sms_number', $credentials['email'])->first();
 
         if (!$user) {
-            return response()->json(['error' => 'Unauthorized - Invalid credentials'], 401);
+            return response()->json(['success' => false, 'message' => 'Unauthorized - Invalid credentials'], 401);
         }
 
         if ($user->authType !== 'password' && !empty($user->authType)) {
-            return response()->json(['error' => 'Unauthorized - Invalid authentication type. Please reach out to the admin'], 401);
+            return response()->json(['success' => false, 'message' => 'Unauthorized - Invalid authentication type. Please reach out to the admin'], 401);
         }
 
         if (!Hash::check($credentials['password'], $user->password)) {
-            return response()->json(['error' => 'Unauthorized - Invalid credentials'], 401);
+            return response()->json(['success' => false, 'message' => 'Unauthorized - Invalid credentials'], 401);
         }
 
         if ($user->two_fa_status === 'active') {
@@ -127,7 +124,7 @@ class LoginController extends Controller
             $user->two_factor_code = $token;
             $user->two_factor_expires_at = now()->addMinutes(config('auth.two_factor_expiration_minutes'));
             $user->save();
-            return response()->json(['message' => '2FA code sent successfully.'], 200);
+            return response()->json(['success' => true, 'message' => '2FA code sent successfully.'], 200);
         }
 
         if (empty($user->authType)) {
@@ -178,19 +175,19 @@ class LoginController extends Controller
 
                     } else {
                         DB::rollBack();
-                        return response()->json(['error' => 'The verification code has expired.'], 400);
+                        return response()->json(['success' => false, 'message' => 'The verification code has expired.'], 400);
                     }
                 } else {
                     DB::rollBack();
-                    return response()->json(['error' => 'Invalid verification code.'], 400);
+                    return response()->json(['success' => false, 'message' => 'Invalid verification code.'], 400);
                 }
             } else {
                 DB::rollBack();
-                return response()->json(['error' => 'User not found or Two-Factor Authentication is not active.'], 404);
+                return response()->json(['success' => false, 'message' => 'User not found or Two-Factor Authentication is not active.'], 404);
             }
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'An unexpected error occurred. Please try again.'], 500);
+            return response()->json(['success' => false, 'message' => 'An unexpected error occurred. Please try again.'], 500);
         }
     }
 
@@ -219,7 +216,5 @@ class LoginController extends Controller
             return response()->json(['error' => 'No token found in cookie.'], 500);
         }
     }
-
-
 
 }

@@ -94,9 +94,13 @@ class UserController extends Controller
 
                 //$this->sendNewAccountEmail($user, $company);
 
-                return response()->json(['success' => 'User Created Successfully'], 200);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'User Created Successfully'], 200);
             } catch (ModelNotFoundException $e) {
-                return response()->json(['error' => 'Company not found.'], 404);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Company not found.'], 404);
             }
         } else {
             return $response;
@@ -178,23 +182,31 @@ class UserController extends Controller
             // Check if user is trying to set OTP as auth type while two_fa_status is active
             if ($authType === 'otp') {
                 if ($user->two_fa_status === 'active') {
-                    return response()->json(['error' => 'Two-factor authentication is already active. Please deactivate it first before changing to OTP.'], 400);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Two-factor authentication is already active. Please deactivate it first before changing to OTP.'], 400);
                 }
             }
 
             // Check if user is trying to set password without a password being set
             if ($authType === 'password') {
                 if (!$user->password) {
-                    return response()->json(['error' => 'You need to set a password first on the security option.'], 400);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You need to set a password first on the security option.'], 400);
                 }
             }
 
             $user->authType = $authType;
             $user->save();
 
-            return response()->json(['message' => 'Authentication type updated successfully.'], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Authentication type updated successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to update Authentication: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update Authentication: ' . $e->getMessage()], 500);
         }
     }
 
@@ -208,18 +220,24 @@ class UserController extends Controller
             $user = $data['user'];
 
             if (!preg_match('/^07\d{8}$/', $smsNumber)) {
-                return response()->json(['error' => 'The phone number must start with "07" and be followed by 8 digits.'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The phone number must start with "07" and be followed by 8 digits.'], 400);
             }
 
             $existingUser = User::where('sms_number', $smsNumber)->first();
             if ($existingUser && $existingUser->id !== $user->id) {
-                return response()->json(['error' => 'This phone number is already in use.'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This phone number is already in use.'], 400);
             }
 
             if ($user->authType === 'password') {
                 if ($twoFaStatus === 'inactive') {
                     if (!$smsNumber) {
-                        return response()->json(['error' => 'You need to provide an SMS number for two-factor authentication'], 400);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'You need to provide an SMS number for two-factor authentication'], 400);
                     } else {
                         $user->sms_number = $smsNumber;
                     }
@@ -229,18 +247,26 @@ class UserController extends Controller
                         $user->two_fa_status = 'inactive';
                         $user->sms_number = null;
                     } else {
-                        return response()->json(['error' => 'Two-factor authentication is already inactive.'], 400);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Two-factor authentication is already inactive.'], 400);
                     }
                 }
 
                 $user->save();
 
-                return response()->json(['success' => 'Two-factor authentication settings updated successfully.'], 200);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Two-factor authentication settings updated successfully.'], 200);
             } else {
-                return response()->json(['error' => 'Two-factor authentication can only be managed for users with password authentication.'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Two-factor authentication can only be managed for users with password authentication.'], 400);
             }
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to update two-factor authentication settings: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update two-factor authentication settings: ' . $e->getMessage()], 500);
         }
     }
 

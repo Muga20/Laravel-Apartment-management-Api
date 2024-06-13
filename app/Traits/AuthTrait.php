@@ -21,7 +21,6 @@ trait AuthTrait
             return $this->handleAuthenticationFailure('Unauthorized - User does not have a valid role');
         }
 
-        $this->updateLastLogin($user, 'Nairobi');
 
         // Generate access token
         $accessToken = $this->generateJwtToken($user);
@@ -29,7 +28,7 @@ trait AuthTrait
         // Generate refresh token (assuming you have a separate function for this)
         $refreshToken = $this->generateRefreshToken($user);
 
-       
+
         return response()->json([
             'message' => 'Success',
             'token' => $accessToken,

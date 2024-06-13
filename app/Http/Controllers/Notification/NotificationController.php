@@ -38,7 +38,9 @@ class NotificationController extends Controller
 
             return response()->json(['notifications' => $notifications], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to retrieve notifications: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve notifications: ' . $e->getMessage()], 500);
         }
     }
 
@@ -54,9 +56,13 @@ class NotificationController extends Controller
             // Dispatch the job to delete the notification
             Queue::push(new DeleteNotificationJob($id));
 
-            return response()->json(['message' => 'Notification delete request queued successfully'], 200);
+            return response()->json([
+                'success' => false,
+                'message' => 'Notification delete request queued successfully'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to queue notification delete request: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to queue notification delete request: ' . $e->getMessage()], 500);
         }
     }
 
@@ -72,7 +78,9 @@ class NotificationController extends Controller
             $channels = Channel::all();
             return response()->json(['channels' => $channels], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred while fetching channels data: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while fetching channels data: ' . $e->getMessage()], 500);
         }
     }
 
@@ -96,10 +104,14 @@ class NotificationController extends Controller
                 'status' => 'active',
             ]);
 
-            return response()->json(['success' => 'Channel created successfully.'], 200);
+            return response()->json([
+                'success' => false,
+                'message' => 'Channel created successfully.'], 200);
         } catch (\Exception $e) {
             report($e);
-            return response()->json(['error' => 'Failed to create channel: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create channel: ' . $e->getMessage()], 500);
         }
     }
 }

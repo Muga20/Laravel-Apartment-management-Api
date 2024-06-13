@@ -29,9 +29,9 @@ class AuthController extends Controller
             ]);
 
         } catch (TokenExpiredException $e) {
-            return response()->json(['error' => 'Refresh token has expired'], 401);
+            return response()->json(['success' => false, 'message' => 'Refresh token has expired'], 401);
         } catch (JWTException $e) {
-            return response()->json(['error' => 'Failed to refresh token'], 401);
+            return response()->json(['success' => false, 'message' => 'Failed to refresh token'], 401);
         }
     }
 }

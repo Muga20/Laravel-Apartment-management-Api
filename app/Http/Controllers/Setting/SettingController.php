@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
+use App\Traits\ImageTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
-use App\Traits\ImageTrait;
 
 class SettingController extends Controller
 {
@@ -17,13 +15,13 @@ class SettingController extends Controller
     {
         $data = $this->loadCommonData($request);
 
-        return view('pages.Setting.Company.index',$data);
+        return view('pages.Setting.Company.index', $data);
     }
 
     public function editCompanyProfile(Request $request)
     {
         $data = $this->loadCommonData($request);
-        return view('pages.Company.update' , $data);
+        return view('pages.Company.update', $data);
     }
 
     public function storeEditedProfile(Request $request)
@@ -39,9 +37,8 @@ class SettingController extends Controller
 
             $companyData = $request->only([
                 'name', 'email', 'status', 'address',
-                'phone', 'description', 'location', 'companyUrl'
+                'phone', 'description', 'location', 'companyUrl',
             ]);
-
 
             $this->updateImage($request, $companyData, 'logoImage');
 
@@ -51,13 +48,14 @@ class SettingController extends Controller
 
             $company->update($companyData);
 
-            return redirect()->back()->with('success', 'Company details updated successfully.');
+            return response()->json([
+                'success' => true,
+                'message', 'Company details updated successfully.'], 201);
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to update company: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message', 'Failed to update company: ' . $e->getMessage()], 500);
         }
     }
-
-
-
 
 }

@@ -33,13 +33,10 @@ class ResetPasswordController extends Controller
 
             // Check if the newPassword key is present in the data array
             if (!$newPassword) {
-                return response()->json(['error' => 'Invalid request data.'], 400);
+                return response()->json(['success' => false, 'message' => 'Invalid request data.'], 400);
             }
 
             $user = $data['user'];
-
-            // Validation
-            // Note: Validation can also be performed using FormRequest classes
 
             if ($user['password'] === null) {
                 $user->update([
@@ -48,9 +45,8 @@ class ResetPasswordController extends Controller
                     'otp' => null,
                 ]);
             } else {
-                // Additional validation for existing password
                 if (!Hash::check($password, $user['password'])) {
-                    return response()->json(['error' => 'Current password is incorrect.'], 400);
+                    return response()->json(['success' => false, 'message' => 'Current password is incorrect.'], 400);
                 }
 
                 $user->update([
@@ -59,11 +55,9 @@ class ResetPasswordController extends Controller
                 ]);
             }
 
-            // Mail::to($user->email)->send(new PasswordUpdated($user));
-
-            return response()->json(['success' => 'Password updated successfully.'], 200);
+            return response()->json(['success' => true, 'message' => 'Password updated successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to update password: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to update password: ' . $e->getMessage()], 500);
         }
     }
 
@@ -82,14 +76,14 @@ class ResetPasswordController extends Controller
 
             $user = $data['user']; // Assuming the user data is passed in the request
 
-            // Validation
-            // Note: Validation can also be performed using FormRequest classes
-
             // Check if email exists
             $emailExists = User::where('email', $email)->exists();
 
             if ($emailExists) {
-                return response()->json(['error' => 'Email already in use.'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email already in use.',
+                ], 400);
             }
 
             $user->update([
@@ -97,14 +91,12 @@ class ResetPasswordController extends Controller
                 'status' => 'active',
             ]);
 
-            // Mail::to($user->email)->send(new EmailUpdated($user->id));
-
             DB::commit();
 
-            return response()->json(['success' => 'Email updated successfully.'], 200);
+            return response()->json(['success' => true, 'message' => 'Email updated successfully.'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['error' => 'Failed to update your email: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to update your email: ' . $e->getMessage()], 500);
         }
     }
 
@@ -116,7 +108,7 @@ class ResetPasswordController extends Controller
             $user = User::where('email', $data['email'])->first();
 
             if (!$user) {
-                return response()->json(['error' => 'User not found.'], 404);
+                return response()->json(['success' => false, 'message' => 'User not found.'], 404);
             }
 
             if ($user->two_fa_status === 'active') {
@@ -136,9 +128,9 @@ class ResetPasswordController extends Controller
 
             Mail::to($user->email)->queue((new ForgotPassword($user, $resetLink)));
 
-            return response()->json(['success' => 'Password reset email sent successfully. Please check your inbox.'], 200);
+            return response()->json(['success' => true, 'message' => 'Password reset email sent successfully. Please check your inbox.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to send password reset email: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to send password reset email: ' . $e->getMessage()], 500);
         }
     }
 
@@ -162,7 +154,7 @@ class ResetPasswordController extends Controller
                 $loggedInUser->password = Hash::make($newPassword);
                 $loggedInUser->save();
 
-                return response()->json(['success' => 'Password updated successfully.'], 200);
+                return response()->json(['success' => true, 'message' => 'Password updated successfully.'], 200);
 
             } elseif (isset($authStatus) && $authStatus === 'authOff') {
 
@@ -170,14 +162,13 @@ class ResetPasswordController extends Controller
                 $tokenData = PasswordResetToken::where('token', $token)->first();
 
                 if (!$tokenData) {
-                    return response()->json(['error' => 'Invalid or expired token.'], 400);
+                    return response()->json(['success' => false, 'message' => 'Invalid or expired token.'], 400);
                 }
 
-             
                 $user = User::where('email', $tokenData->email)->first();
 
                 if (!$user) {
-                    return response()->json(['error' => 'User not found.'], 404);
+                    return response()->json(['success' => false, 'message' => 'User not found.'], 404);
                 }
 
                 $user->password = Hash::make($newPassword);
@@ -188,11 +179,10 @@ class ResetPasswordController extends Controller
 
                 return $this->handleAuthentication($user, $request);
             } else {
-                return response()->json(['error' => 'Invalid authentication status.'], 400);
+                return response()->json(['success' => false, 'message' => 'Invalid authentication status.'], 400);
             }
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to update password: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to update password: ' . $e->getMessage()], 500);
         }
     }
-
 }

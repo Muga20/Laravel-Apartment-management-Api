@@ -24,7 +24,9 @@ class PlanController extends Controller
             $plans = Plans::all();
             return response()->json(['plans' => $plans], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred while fetching plans data'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while fetching plans data'], 500);
         }
     }
 
@@ -56,12 +58,18 @@ class PlanController extends Controller
 
             $plan->save();
 
-            return response()->json(['message' => 'Plan Created Successfully'], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Plan Created Successfully'], 200);
 
         } catch (ValidationException $e) {
-            return response()->json(['error' => $e->validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create plan. Please try again.'. $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create plan. Please try again.' . $e->getMessage()], 500);
         }
     }
 
@@ -94,12 +102,18 @@ class PlanController extends Controller
 
             $selectedPlan->save();
 
-            return response()->json(['message' => 'Plan Updated Successfully'], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Plan Updated Successfully'], 200);
 
         } catch (ValidationException $e) {
-            return response()->json(['error' => $e->validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to update plan. Please try again.'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update plan. Please try again.'], 500);
         }
     }
 
@@ -126,9 +140,13 @@ class PlanController extends Controller
 
             $action = ($selectedPlan->status === 'active') ? 'activated' : 'deactivated';
 
-            return response()->json(['message' => "Plan $action successfully"], 200);
+            return response()->json([
+                'success' => true,
+                'message' => "Plan $action successfully"], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to toggle plan status. Please try again.'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to toggle plan status. Please try again.'], 500);
         }
     }
 
@@ -147,12 +165,18 @@ class PlanController extends Controller
             // Check if the plan status is not active
             if ($plan->status !== 'active') {
                 $plan->delete();
-                return response()->json(['message' => 'Plan deleted successfully'], 200);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Plan deleted successfully'], 200);
             } else {
-                return response()->json(['error' => 'Cannot delete plan with active status'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete plan with active status'], 400);
             }
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to delete plan. Please try again.'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete plan. Please try again.'], 500);
         }
     }
 

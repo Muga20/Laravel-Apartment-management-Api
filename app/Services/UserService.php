@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Jobs\GenerateAvatar;
-use App\Jobs\UploadImage;
 use App\Models\Units;
 use App\Models\User;
 use App\Models\UserDetails;
@@ -39,7 +38,9 @@ class UserService
             $requiredRolesLvTwo = $this->rolesThatMustHave(2);
 
             if (count(array_intersect($requiredRolesLvTwo, $userRoles)) === 0) {
-                return response()->json(['error' => 'Unauthorized'], 403);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'], 403);
             }
 
             $company = $data['company'];
@@ -49,7 +50,9 @@ class UserService
             $userCount = $company->users()->count();
 
             if ($userCount >= 300) {
-                return response()->json(['error' => 'Maximum number of users reached for this company'], 403);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Maximum number of users reached for this company'], 403);
             }
 
             $compressionService = new CompressionService();
@@ -58,7 +61,9 @@ class UserService
             $existingUser = User::where('email', $compressedEmail)->first();
 
             if ($existingUser) {
-                return response()->json(['error' => 'Email already exists.'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email already exists.'], 400);
             }
 
             $user = new User();
@@ -91,7 +96,6 @@ class UserService
                 Queue::push(new GenerateAvatar($userDetails));
             }
 
-
             RoleService::assignDefaultRole($user, 'user');
 
             $this->createNotification($user, $authUser, $userRoles);
@@ -99,7 +103,9 @@ class UserService
             return $user;
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500, [], JSON_UNESCAPED_UNICODE);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create user: ' . $e->getMessage()], 500, );
         }
     }
 
@@ -149,7 +155,9 @@ class UserService
             // Check if ID number already exists for a different user
             $existingIdNumberTenant = UserDetails::where('id_number', $request->input('id_number'))->first();
             if ($existingIdNumberTenant && $existingIdNumberTenant->user_id != $user->id) {
-                return response()->json(['error' => 'ID number already exists'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ID number already exists'], 400);
             }
 
             // Convert date format for date of birth
@@ -163,7 +171,9 @@ class UserService
                 $age = $dob->diff($today)->y;
 
                 if ($age < 18) {
-                    return response()->json(['error' => 'User must be 18 years or older'], 400);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'User must be 18 years or older'], 400);
                 }
             }
 
@@ -171,13 +181,19 @@ class UserService
             unset($userData['profile_image']);
             $userDetails->update($userData);
 
-            return response()->json(['success' => 'User details updated successfully.'], 200);
+            return response()->json([
+                'success' => true,
+                'success' => 'User details updated successfully.'], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Handle validation errors
-            return response()->json(['error' => $e->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => $e->errors()], 422);
         } catch (\Exception $e) {
             // Handle other exceptions
-            return response()->json(['error' => 'Failed to update user: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update user: ' . $e->getMessage()], 500);
         }
     }
 
@@ -191,12 +207,16 @@ class UserService
 
             $existingEmailTenant = User::where('email', $compressedEmail)->first();
             if ($existingEmailTenant) {
-                return response()->json(['error' => 'Email already exists'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email already exists'], 400);
             }
 
             $existingIdNumberTenant = UserDetails::where('id_number', $request->input('id_number'))->first();
             if ($existingIdNumberTenant) {
-                return response()->json(['error' => 'ID number already exists'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ID number already exists'], 400);
             }
 
             $dob = new \DateTime($request->input('date_of_birth'));
@@ -204,7 +224,9 @@ class UserService
             $age = $dob->diff($today)->y;
 
             if ($age < 18) {
-                return response()->json(['error' => 'Tenant must be 18 years or older'], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tenant must be 18 years or older'], 400);
             }
 
             $company_id = $company->id;
@@ -247,7 +269,9 @@ class UserService
                 $unit = Units::where('unit_name', $unit)->firstOrFail();
 
                 if ($unit->tenant_id) {
-                    return response()->json(['error' => 'This unit is already occupied.'], 400);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This unit is already occupied.'], 400);
                 }
 
                 $unit->update([
@@ -255,12 +279,18 @@ class UserService
                     'status' => 'occupied',
                 ]);
 
-                return response()->json(['success' => 'Tenant rented successfully.'], 200);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Tenant rented successfully.'], 200);
             } catch (\Exception $e) {
-                return response()->json(['error' => 'Failed to rent tenant. Please try again.'], 500);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to rent tenant. Please try again.'], 500);
             }
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create tenant'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create tenant'], 500);
         }
     }
 

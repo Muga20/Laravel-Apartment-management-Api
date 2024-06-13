@@ -15,6 +15,7 @@ class PaymentSettingController extends Controller
     public function paymentModeTypes(Request $request)
     {
         try {
+            // Assuming loadCommonData method exists and returns necessary data
             $data = $this->loadCommonData($request);
             $payments = PaymentType::all();
             return response()->json([
@@ -22,7 +23,7 @@ class PaymentSettingController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to get payments',
+                'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }
@@ -48,11 +49,12 @@ class PaymentSettingController extends Controller
             $successMessage = $newStatus === 'inactive' ? 'Payment type deactivated successfully.' : 'Payment type activated successfully.';
 
             return response()->json([
+                'success' => true,
                 'message' => $successMessage,
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to Deactivate / Activate payments',
+                'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }
@@ -61,27 +63,24 @@ class PaymentSettingController extends Controller
     public function storePayment(Request $request)
     {
         try {
-
             $request->validate([
                 'name' => 'required|string|max:255',
             ]);
 
-            $paymentId = PaymentType::count() + 1;
-            $slug = Str::slug($request->input('name'), '-') . '-' . $paymentId;
-
             $paymentType = new PaymentType();
             $paymentType->name = $request->name;
             $paymentType->status = 'active';
-            $paymentType->slug = $slug;
+            $paymentType->slug = Str::slug($request->input('name'), '-') . '-' . (PaymentType::count() + 1);
 
             $paymentType->save();
 
             return response()->json([
-                'message' => 'Payment Created Successfully ',
+                'success' => true,
+                'message' => 'Payment Created Successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to Create payments',
+                'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }
@@ -99,9 +98,15 @@ class PaymentSettingController extends Controller
             $paymentType->name = $request->name;
             $paymentType->save();
 
-            return redirect()->back()->with('success', 'Payment type updated successfully.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment type updated successfully.',
+            ], 201);
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update Payment type. Please try again.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update Payment type. Please try again.',
+            ], 500);
         }
     }
 
@@ -121,7 +126,9 @@ class PaymentSettingController extends Controller
                 ->first();
 
             if ($existingPayment) {
-                return redirect()->back()->with('error', 'Company already has this Payment type.');
+                return response()->json([
+                    'success' => false,
+                    'message', 'Company already has this Payment type.'], 201);
             }
 
             $paymentType = new HomePaymentTypes();
@@ -129,23 +136,31 @@ class PaymentSettingController extends Controller
             $paymentType->payment_type_id = $request->input('payment_type_id');
             $paymentType->save();
 
-            return redirect()->back()->with('success', 'Payment type created successfully.');
+            return redirect()->back()->with([
+                'success' => true,
+                'message' => 'Payment type created successfully.',
+            ]);
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create Payment type. Please try again.');
+            return response()->json([
+                'success' => false,
+                'message', 'Failed to create Payment type. Please try again.'],400);
         }
     }
 
     public function deletePaymentAction($dummy, $paymentId)
     {
-
         try {
             $payments = HomePaymentTypes::where('payment_type_id', $paymentId)
                 ->firstOrFail();
             $payments->delete();
 
-            return redirect()->back()->with('success', 'Payment  removed successfully from user.');
+            return response()->json([
+                'success' => true,
+                'message', 'Payment removed successfully from user.'],201);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to remove Payment from user: ' . $e->getMessage());
+            return response()->json([
+                'success' => true,
+                'message', 'Failed to remove Payment from user: ' . $e->getMessage()],400);
         }
     }
 
@@ -156,18 +171,20 @@ class PaymentSettingController extends Controller
 
             if ($paymentType->status === 'active') {
                 return response()->json([
-                    'error' => 'Payment type is active and cannot be deleted.',
+                    'success' => false,
+                    'message' => 'Payment type is active and cannot be deleted.',
                 ], 400);
             }
 
             $paymentType->delete();
 
             return response()->json([
-                'message' => 'Payment deleted Successfully ',
+                'success' => true,
+                'message' => 'Payment deleted Successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to delete payments',
+                'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }

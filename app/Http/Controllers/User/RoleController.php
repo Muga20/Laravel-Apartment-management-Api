@@ -27,7 +27,9 @@ class RoleController extends Controller
 
             return response()->json(['roles' => $roles, 'color' => $roleColors], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to fetch roles: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch roles: ' . $e->getMessage()], 500);
         }
     }
 
@@ -49,24 +51,17 @@ class RoleController extends Controller
             $role->slug = Str::slug($validatedData['name'], '-');
             $role->save();
 
-            return response()->json(['success' => 'Role created successfully'], 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'Role created successfully'], 201);
 
         } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to create Roles. Please try again.'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create Roles. Please try again.'], 500);
         }
     }
 
-    public function editRole(Request $request, $dummy, $role)
-    {
-        $data = $this->loadCommonData($request);
-
-        $decodedRoleId = base64_decode($role);
-        $roleId = unserialize($decodedRoleId);
-
-        $roleName = Roles::findOrFail($roleId);
-
-        return view('pages.Roles.edit', compact('roleName') + $data);
-    }
 
     public function updateRole(Request $request, $role)
     {
@@ -82,10 +77,14 @@ class RoleController extends Controller
 
             $roleName->save();
 
-            return redirect()->back()->with('success', 'Role Updated Successfully');
+            return response()->json([
+                'success' => true,
+                'message' => 'Role created successfully'], 201);
 
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update Role. Please try again.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update roles. please try again.'], 500);
         }
     }
 
@@ -95,7 +94,9 @@ class RoleController extends Controller
             $user = User::findOrFail($deactivate);
 
             if (!$user) {
-                return response()->json(['error' => 'User not found.'], 404);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found.'], 404);
             }
 
             $newStatus = $user->status === 'active' ? 'inactive' : 'active';
@@ -106,9 +107,13 @@ class RoleController extends Controller
 
             $successMessage = $newStatus === 'inactive' ? 'User deactivated successfully.' : 'User activated successfully.';
 
-            return response()->json(['message' => $successMessage], 200);
+            return response()->json([
+                'success' => true,
+                'message' => $successMessage], 200);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to deactivate/activate user. Please try again.'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to deactivate/activate user. Please try again.'], 500);
         }
     }
 
@@ -118,7 +123,9 @@ class RoleController extends Controller
             $role = Roles::findOrFail($role);
 
             if (!$role) {
-                return response()->json(['error' => 'Role not found.'], 404);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Role not found.'], 404);
             }
 
             $newStatus = $role->status === 'active' ? 'inactive' : 'active';
@@ -129,9 +136,13 @@ class RoleController extends Controller
 
             $successMessage = $newStatus === 'inactive' ? 'Role deactivated successfully.' : 'Role activated successfully.';
 
-            return response()->json(['message' => $successMessage], 200);
+            return response()->json([
+                'success' => true,
+                'message' => $successMessage], 200);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to deactivate/activate role. Please try again.'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to deactivate/activate role. Please try again.'], 500);
         }
     }
 
@@ -156,12 +167,18 @@ class RoleController extends Controller
                 $userRole->role_id = $role->id;
                 $userRole->save();
             } else {
-                return response()->json(['message' => 'User already has this role.'], 200);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'User already has this role.'], 200);
             }
 
-            return response()->json(['message' => 'Role assigned successfully'], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Role assigned successfully'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to assign role: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign role: ' . $e->getMessage()], 500);
         }
     }
 
@@ -177,9 +194,13 @@ class RoleController extends Controller
 
             $roleAssociation->delete();
 
-            return response()->json(['message' => 'Role removed successfully from user'], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Role removed successfully from user'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to remove role from user: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove role from user: ' . $e->getMessage()], 500);
         }
     }
 
@@ -190,18 +211,21 @@ class RoleController extends Controller
 
             if ($roleModel->status === 'active') {
                 return response()->json([
-                    'error' => 'Role is active and cannot be deleted.',
+                    'success' => false,
+                    'message' => 'Role is active and cannot be deleted.',
                 ], 400);
             }
 
             $roleModel->delete();
 
             return response()->json([
+                'success' => true,
                 'message' => 'Role deleted successfully',
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to delete role: ' . $e->getMessage(),
+                'success' => false,
+                'message' => 'Failed to delete role: ' . $e->getMessage(),
             ], 500);
         }
     }

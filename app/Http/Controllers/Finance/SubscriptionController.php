@@ -40,7 +40,8 @@ class SubscriptionController extends Controller
         } catch (\Exception $e) {
 
             return response()->json([
-                'error' => 'An error occurred while fetching companies data',
+                'success' => false,
+                'message' => 'An error occurred while fetching companies data',
             ], 500);
         }
     }
